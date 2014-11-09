@@ -30,6 +30,13 @@ struct datastore
 
 struct datastore datastore = { NULL, 0 };
 
+schema**
+datastore_get_schemata (unsigned int *nschemata)
+{
+  *nschemata = datastore.nschemata;
+  return datastore.schemata;
+}
+
 schema*
 datastore_get_schema_by_name (const char *name)
 {

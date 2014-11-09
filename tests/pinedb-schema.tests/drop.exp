@@ -1,5 +1,56 @@
 
 # exp_internal 1
 
+set test_name "simple schema drop"
+given an executable "../pinedb/pinedb" \
+  when I run \
+  and I send "create schema `test`;\r" \
+  and I send "drop schema `test`;\r" \
+  then I should see "successfully dropped schema `test`" \
+  when I send "show databases;\r\x04" \
+  then I should not see "test" \
+  and it should return 0 \
+  when I run \
+  and I send "create schema `test`;\r" \
+  and I send "drop database `test`;\r" \
+  then I should see "successfully dropped schema `test`" \
+  when I send "show databases;\r\x04" \
+  then I should not see "test" \
+  and it should return 0 \
+  when I run \
+  and I send "create schema `test`;\r" \
+  and I send "drop schema if exists `test`;\r" \
+  then I should see "successfully dropped schema `test`" \
+  when I send "show databases;\r\x04" \
+  then I should not see "test" \
+  and it should return 0 \
+  when I run \
+  and I send "create schema `test`;\r" \
+  and I send "drop database if exists `test`;\r" \
+  then I should see "successfully dropped schema `test`" \
+  when I send "show databases;\r\x04" \
+  then I should not see "test" \
+  and it should return 0
+
+
+set test_name "drop nonexistant schema"
+given an executable "../pinedb/pinedb" \
+  when I run \
+  and I send "drop database `test`;\r\x04" \
+  then I should see "unable to drop schema `test`: does not exist" \
+  and it should not return 0 \
+  when I run \
+  and I send "drop schema `test`;\r\x04" \
+  then I should see "unable to drop schema `test`: does not exist" \
+  and it should not return 0 \
+  when I run \
+  and I send "drop database if exists `test`;\r\x04" \
+  then I should see "skipping dropping of schema `test`: does not exist" \
+  and it should return 0 \
+  when I run \
+  and I send "drop schema if exists `test`;\r\x04" \
+  then I should see "skipping dropping of schema `test`: does not exist" \
+  and it should return 0
+
 
 send_user "\n"

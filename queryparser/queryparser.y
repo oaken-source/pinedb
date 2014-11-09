@@ -47,7 +47,7 @@
 
 %}
 
-%token CREATE DROP SCHEMA IF_NOT_EXISTS IF_EXISTS db_name SEMICOLON INVALID
+%token CREATE DROP SHOW SCHEMA SCHEMATA IF_NOT_EXISTS IF_EXISTS db_name SEMICOLON INVALID
 
 %error-verbose
 
@@ -63,6 +63,7 @@ SCRIPT:
 STATEMENT:
     CREATE_SCHEMA_STATEMENT
   | DROP_SCHEMA_STATEMENT
+  | SHOW_DATABASES_STATEMENT
 ;
 
 /* create schema statement */
@@ -149,6 +150,23 @@ DROP_SCHEMA_STATEMENT:
 
         free($4.s);
       }
+;
+
+/* show databases statement */
+SHOW_DATABASES_STATEMENT:
+    SHOW SCHEMATA SEMICOLON
+      {
+        unsigned int nschemata;
+        schema **schemata = datastore_get_schemata(&nschemata);
+
+        printf(" databases\n");
+        printf(" ---------\n");
+
+        unsigned int i;
+        for (i = 0; i < nschemata; ++i)
+          printf(" %s\n", schemata[i]->name);
+      }
+;
 
 %%
 

@@ -41,42 +41,48 @@
 
 %%
 
-#.*               /* ignore comments */
---.*              /* ignore comments */
+#.*                 /* ignore comments */
+--.*                /* ignore comments */
 
-create            { yylval.l = yylineno; yylval.c = yycharno;
-                    yycharno += yyleng;
-                    return CREATE; }
-drop              { yylval.l = yylineno; yylval.c = yycharno;
-                    yycharno += yyleng;
-                    return DROP; }
-database|schema   { yylval.l = yylineno; yylval.c = yycharno;
-                    yycharno += yyleng;
-                    return SCHEMA; }
-if\ not\ exists   { yylval.l = yylineno; yylval.c = yycharno;
-                    yycharno += yyleng;
-                    return IF_NOT_EXISTS; }
-if\ exists        { yylval.l = yylineno; yylval.c = yycharno;
-                    yycharno += yyleng;
-                    return IF_EXISTS; }
+create              { yylval.l = yylineno; yylval.c = yycharno;
+                      yycharno += yyleng;
+                      return CREATE; }
+drop                { yylval.l = yylineno; yylval.c = yycharno;
+                      yycharno += yyleng;
+                      return DROP; }
+show                { yylval.l = yylineno; yylval.c = yycharno;
+                      yycharno += yyleng;
+                      return SHOW; }
+database|schema     { yylval.l = yylineno; yylval.c = yycharno;
+                      yycharno += yyleng;
+                      return SCHEMA; }
+databases|schemata  { yylval.l = yylineno; yylval.c = yycharno;
+                      yycharno += yyleng;
+                      return SCHEMATA; }
+if\ not\ exists     { yylval.l = yylineno; yylval.c = yycharno;
+                      yycharno += yyleng;
+                      return IF_NOT_EXISTS; }
+if\ exists          { yylval.l = yylineno; yylval.c = yycharno;
+                      yycharno += yyleng;
+                      return IF_EXISTS; }
 
-`.*`              { yytext[yyleng - 1] = 0;
-                    yylval.s = strdup(yytext + 1); yylval.l = yylineno; yylval.c = yycharno;
-                    yycharno += yyleng;
-                    return db_name; }
-[a-zA-Z0-9$_]*    { yylval.s = strdup(yytext); yylval.l = yylineno; yylval.c = yycharno;
-                    yycharno += yyleng;
-                    return db_name; }
+`.*`                { yytext[yyleng - 1] = 0;
+                      yylval.s = strdup(yytext + 1); yylval.l = yylineno; yylval.c = yycharno;
+                      yycharno += yyleng;
+                      return db_name; }
+[a-zA-Z0-9$_]*      { yylval.s = strdup(yytext); yylval.l = yylineno; yylval.c = yycharno;
+                      yycharno += yyleng;
+                      return db_name; }
 
-;                 { yylval.l = yylineno; yylval.c = yycharno;
-                    yycharno += yyleng;
-                    return SEMICOLON; }
+;                   { yylval.l = yylineno; yylval.c = yycharno;
+                      yycharno += yyleng;
+                      return SEMICOLON; }
 
-\n                { printf("> "); fflush(stdout); yycharno = 0; }
-[ \r\t]*          { yycharno += yyleng; }
+\n                  { printf("> "); fflush(stdout); yycharno = 0; }
+[ \r\t]*            { yycharno += yyleng; }
 
-.                 { yylval.l = yylineno; yylval.c = yycharno;
-                    yycharno += yyleng;
-                    return INVALID; }
+.                   { yylval.l = yylineno; yylval.c = yycharno;
+                      yycharno += yyleng;
+                      return INVALID; }
 
 %%

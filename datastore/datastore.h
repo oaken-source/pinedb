@@ -25,6 +25,8 @@
 
 #include "schema.h"
 
+schema **datastore_get_schemata(unsigned int *nschemata);
+
 schema *datastore_get_schema_by_name(const char *name);
 
 int datastore_add_schema(schema *s) may_fail;
