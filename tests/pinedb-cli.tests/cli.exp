@@ -1,0 +1,56 @@
+
+# exp_internal 1
+
+# test for --quiet / -q option
+set test_name "\[--quiet/-q\]"
+given an executable "../pinedb/pinedb" \
+  when I run with parameters "$srcdir/test.sql --quiet" \
+  then it should return 0 \
+  when I run with parameters "$srcdir/test.sql -q" \
+  then it should return 0
+
+
+# test for --help / -? option
+set test_name "\[--help/-?\]"
+given an executable "../pinedb/pinedb" \
+  when I run with parameters "--help" \
+  then I should see "turn a specific category of warnings on or off" \
+  and it should return 0 \
+  when I run with parameters "-?" \
+  then I should see "turn a specific category of warnings on or off" \
+  and it should return 0
+
+
+# test for --usage option
+set test_name "\[--usage\]"
+given an executable "../pinedb/pinedb" \
+  when I run with parameters "--usage" \
+  then I should not see "turn a specific category of warnings on or off" \
+  and it should return 0 \
+  when I run with parameters "--usage" \
+  then I should see "Usage: pinedb" \
+  and it should return 0
+
+
+# test for --version / -V option
+set test_name "\[--version/-V\]"
+given an executable "../pinedb/pinedb" \
+  when I run with parameters "--version" \
+  then I should see "pinedb 0.1" \
+  and it should return 0 \
+  when I run with parameters "-V" \
+  then I should see "pinedb 0.1" \
+  and it should return 0
+
+
+# test for -W flag family
+set test_name "\[-W\[no-\]<warnings>\]"
+given an executable "../pinedb/pinedb" \
+  when I run with parameters "$srcdir/test.sql -Wall" \
+  then it should return 0 \
+  when I run with parameters "$srcdir/test.sql -Wnon-existant-error" \
+  then I should see "error: unrecognized warning flag: -Wnon-existant-error" \
+  and it should not return 0
+
+
+send_user "\n"

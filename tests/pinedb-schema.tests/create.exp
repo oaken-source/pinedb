@@ -1,0 +1,40 @@
+
+# exp_internal 1
+
+set test_name "create simple schema"
+given an executable "../pinedb/pinedb" \
+  when I run \
+  and I send "create schema `test`;\r\x04" \
+  then I should see "successfully created schema `test`" \
+  and it should return 0 \
+  when I run \
+  and I send "create schema if not exists `test`;\r\x04" \
+  then I should see "successfully created schema `test`" \
+  and it should return 0 \
+  when I run \
+  and I send "create database `test`;\r\x04" \
+  then I should see "successfully created schema `test`" \
+  and it should return 0 \
+  when I run \
+  and I send "create database if not exists `test`;\r\x04" \
+  then I should see "successfully created schema `test`" \
+  and it should return 0
+
+
+set test_name "create duplicate schema"
+given an executable "../pinedb/pinedb" \
+  when I run \
+  and I send "create schema `test`;\r" \
+  then I should see "successfully created schema `test`" \
+  when I send "create schema `test`;\r\x04" \
+  then I should see "unable to create schema `test`: already exists" \
+  and it should not return 0 \
+  when I run \
+  and I send "create schema `test`;\r" \
+  then I should see "successfully created schema `test`" \
+  when I send "create schema if not exists `test`;\r\x04" \
+  then I should see "skipping creation of schema `test`: already exists" \
+  and it should return 0
+
+
+send_user "\n"
