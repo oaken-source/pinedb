@@ -25,18 +25,17 @@
 #include "datastore/datastore.h"
 
 #include <stdio.h>
+#include <time.h>
 
 #define query_return_result(RES) \
   do { \
-    printf("ok: [%.8lfs]\n", query_get_elapsed()); \
+    struct timespec end; \
+    clock_gettime(CLOCK_MONOTONIC, &end); \
+    double elapsed = (end.tv_sec + 1.0e-9 * end.tv_nsec) - \
+        (queryparser_time.tv_sec + 1.0e-9 * queryparser_time.tv_nsec); \
+    printf("ok: [%.8lfs]\n", elapsed); \
     return 0; \
   } while (0)
-
-static double
-query_get_elapsed (void)
-{
-  return 0;
-}
 
 int
 query_create_schema (const char *name, int strict)
