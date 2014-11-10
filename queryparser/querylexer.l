@@ -36,6 +36,7 @@
   #include <grapes/util.h>
 
   unsigned int yycharno = 0;
+  unsigned int yylex_from_stdin = 0;
 
 }
 
@@ -78,7 +79,8 @@ if\ exists          { yylval.l = yylineno; yylval.c = yycharno;
                       yycharno += yyleng;
                       return SEMICOLON; }
 
-\n                  { printf("> "); fflush(stdout); yycharno = 0; }
+\n                  { yycharno = 0;
+                      if (yylex_from_stdin) { printf("> "); fflush(stdout); } yycharno = 0; }
 [ \r\t]*            { yycharno += yyleng; }
 
 .                   { yylval.l = yylineno; yylval.c = yycharno;

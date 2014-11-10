@@ -22,10 +22,12 @@
 
   #include <config.h>
 
+  #include "query.h"
   #include "assertions.h"
   #include "datastore/datastore.h"
 
   #include <stdio.h>
+  #include <time.h>
 
   #define YYSTYPE yystoken
 
@@ -45,6 +47,15 @@
   unsigned int queryparser_line;
   unsigned int queryparser_char;
 
+  time_t queryparser_time;
+
+  #define queryparser_entry(S) \
+      do { \
+        queryparser_line = S.l; \
+        queryparser_char = S.c; \
+        queryparser_time = time(NULL); \
+      } while (0)
+
 %}
 
 %token CREATE DROP SHOW SCHEMA SCHEMATA IF_NOT_EXISTS IF_EXISTS db_name SEMICOLON INVALID
@@ -54,117 +65,61 @@
 %%
 
 /* a database script is a list of statements */
-SCRIPT:
+STATEMENTS:
     /* empty */
-  | SCRIPT STATEMENT
+  | STATEMENTS STATEMENT SEMICOLON
 ;
 
 /* dispatch statements */
 STATEMENT:
-    CREATE_SCHEMA_STATEMENT
-  | DROP_SCHEMA_STATEMENT
-  | SHOW_DATABASES_STATEMENT
+    CREATE CREATE_STATEMENT
+  | DROP DROP_STATEMENT
+  | SHOW SHOW_STATEMENT
 ;
 
 /* create schema statement */
-CREATE_SCHEMA_STATEMENT:
-    CREATE SCHEMA db_name SEMICOLON
+CREATE_STATEMENT:
+    SCHEMA db_name
       {
-        queryparser_line = $3.l;
-        queryparser_char = $3.c;
-
-        schema *s = datastore_get_schema_by_name($3.s);
-        parser_assert_err(QUERY_ERR_SCHEMA_CREATE_EEXISTS, !s, $3.s);
-
-        s = malloc(sizeof(*s));
-        assert_inner(s, "malloc");
-        int res = schema_init(s, $3.s);
-        assert_inner(!res, "schema_init");
-
-        res = datastore_add_schema(s);
-        assert_inner(!res, "datastore_add_schema");
-
-        printf("successfully created schema `%s`\n", $3.s);
-
-        free($3.s);
+        queryparser_entry($2);
+        int res = query_create_schema($2.s, 1);
+        assert_inner(!res, "query_create_schema");
+        free($2.s);
       }
-  | CREATE SCHEMA IF_NOT_EXISTS db_name SEMICOLON
+  | SCHEMA IF_NOT_EXISTS db_name
       {
-        queryparser_line = $4.l;
-        queryparser_char = $4.c;
-
-        schema *s = datastore_get_schema_by_name($4.s);
-        if (s)
-          {
-            printf("skipping creation of schema `%s`: already exists\n", $4.s);
-          }
-        else
-          {
-            s = malloc(sizeof(*s));
-            assert_inner(s, "malloc");
-            int res = schema_init(s, $4.s);
-            assert_inner(!res, "schema_init");
-
-            res = datastore_add_schema(s);
-            assert_inner(!res, "datastore_add_schema");
-
-            printf("successfully created schema `%s`\n", $4.s);
-          }
-
-        free($4.s);
+        queryparser_entry($3);
+        int res = query_create_schema($3.s, 0);
+        assert_inner(!res, "query_create_schema");
+        free($3.s);
       }
 ;
 
 /* drop schema statement */
-DROP_SCHEMA_STATEMENT:
-    DROP SCHEMA db_name SEMICOLON
+DROP_STATEMENT:
+    SCHEMA db_name
       {
-        queryparser_line = $3.l;
-        queryparser_char = $3.c;
-
-        schema *s = datastore_get_schema_by_name($3.s);
-        parser_assert_err(QUERY_ERR_SCHEMA_DROP_NOEXIST, s, $3.s);
-
-        datastore_remove_schema(s);
-
-        printf("successfully dropped schema `%s`\n", $3.s);
-
-        free($3.s);
+        queryparser_entry($2);
+        int res = query_drop_schema($2.s, 1);
+        assert_inner(!res, "query_drop_schema");
+        free($2.s);
       }
-  | DROP SCHEMA IF_EXISTS db_name SEMICOLON
+  | SCHEMA IF_EXISTS db_name
       {
-        queryparser_line = $4.l;
-        queryparser_char = $4.c;
-
-        schema *s = datastore_get_schema_by_name($4.s);
-        if (!s)
-          {
-            printf("skipping dropping of schema `%s`: does not exist\n", $4.s);
-          }
-        else
-          {
-            datastore_remove_schema(s);
-
-            printf("successfully dropped schema `%s`\n", $4.s);
-          }
-
-        free($4.s);
+        queryparser_entry($3);
+        int res = query_drop_schema($3.s, 0);
+        assert_inner(!res, "query_drop_schema");
+        free($3.s);
       }
 ;
 
 /* show databases statement */
-SHOW_DATABASES_STATEMENT:
-    SHOW SCHEMATA SEMICOLON
+SHOW_STATEMENT:
+    SCHEMATA
       {
-        unsigned int nschemata;
-        schema **schemata = datastore_get_schemata(&nschemata);
-
-        printf(" databases\n");
-        printf(" ---------\n");
-
-        unsigned int i;
-        for (i = 0; i < nschemata; ++i)
-          printf(" %s\n", schemata[i]->name);
+        queryparser_entry($1);
+        int res = query_show_schemata();
+        assert_inner(!res, "query_show_schemata");
       }
 ;
 
@@ -172,6 +127,7 @@ SHOW_DATABASES_STATEMENT:
 
 extern void yy_scan_string(const char *data);
 extern void yylex_destroy(void);
+extern unsigned int yylex_from_stdin;
 
 int
 queryparser_parse_from_file (const char *filename, const char *data)
@@ -179,6 +135,8 @@ queryparser_parse_from_file (const char *filename, const char *data)
   queryparser_file = filename;
   queryparser_line = 0;
   queryparser_char = 0;
+
+  yylex_from_stdin = 0;
 
   yy_scan_string(data);
   int res = yyparse();
@@ -194,6 +152,8 @@ queryparser_parse_from_stdin (void)
   queryparser_file = "<stdin>";
   queryparser_line = 0;
   queryparser_char = 0;
+
+  yylex_from_stdin = 1;
 
   printf("> ");
   fflush(stdout);

@@ -5,25 +5,25 @@ set test_name "create simple schema"
 given an executable "../pinedb/pinedb" \
   when I run \
   and I send "create schema `test`;\r" \
-  then I should see "successfully created schema `test`" \
+  then I should see "ok:" \
   when I send "show databases;\r\x04" \
   then I should see "test" \
   and it should return 0 \
   when I run \
   and I send "create schema if not exists `test`;\r" \
-  then I should see "successfully created schema `test`" \
+  then I should see "ok:" \
   when I send "show databases;\r\x04" \
   then I should see "test" \
   and it should return 0 \
   when I run \
   and I send "create database `test`;\r" \
-  then I should see "successfully created schema `test`" \
+  then I should see "ok:" \
   when I send "show databases;\r\x04" \
   then I should see "test" \
   and it should return 0 \
   when I run \
   and I send "create database if not exists `test`;\r" \
-  then I should see "successfully created schema `test`" \
+  then I should see "ok:" \
   when I send "show databases;\r\x04" \
   then I should see "test" \
   and it should return 0
@@ -33,7 +33,7 @@ set test_name "create duplicate schema"
 given an executable "../pinedb/pinedb" \
   when I run \
   and I send "create schema `test`;\r" \
-  then I should see "successfully created schema `test`" \
+  then I should see "ok:" \
   when I send "show databases;\r" \
   then I should see "test" \
   when I send "create schema `test`;\r\x04" \
@@ -41,11 +41,11 @@ given an executable "../pinedb/pinedb" \
   and it should not return 0 \
   when I run \
   and I send "create schema `test`;\r" \
-  then I should see "successfully created schema `test`" \
+  then I should see "ok:" \
   when I send "show databases;\r" \
   then I should see "test" \
   when I send "create schema if not exists `test`;\r" \
-  then I should see "skipping creation of schema `test`: already exists" \
+  then I should see "ok (skipped):" \
   when I send "show databases;\r\x04" \
   then I should see "test" \
   and it should return 0
@@ -55,9 +55,9 @@ set test_name "create multiple schemata"
 given an executable "../pinedb/pinedb" \
   when I run \
   and I send "create schema `test1`;\r" \
-  then I should see "successfully created schema `test1`" \
+  then I should see "ok:" \
   when I send "create schema `test2`;\r" \
-  then I should see "successfully created schema `test2`" \
+  then I should see "ok:" \
   when I send "show databases;\r\x04" \
   then I should see "test1" \
   and I should see "test2" \
@@ -68,13 +68,13 @@ set test_name "create schema with weird name"
 given an executable "../pinedb/pinedb" \
   when I run \
   and I send "create schema test;\r" \
-  then I should see "successfully created schema `test`" \
+  then I should see "ok:" \
   when I send "create schema te-st;\r\x04" \
   then I should see "syntax error" \
   and it should not return 0 \
   when I run \
   and I send "create schema `te-st`;\r\x04" \
-  then I should see "successfully created schema `te-st`" \
+  then I should see "ok:" \
   and it should return 0
 
 
