@@ -47,13 +47,13 @@
   unsigned int queryparser_line;
   unsigned int queryparser_char;
 
-  time_t queryparser_time;
+  struct timespec queryparser_time;
 
   #define queryparser_entry(S) \
       do { \
         queryparser_line = S.l; \
         queryparser_char = S.c; \
-        queryparser_time = time(NULL); \
+        clock_gettime(CLOCK_MONOTONIC, &queryparser_time); \
       } while (0)
 
 %}
@@ -146,6 +146,8 @@ queryparser_parse_from_file (const char *filename, const char *data)
   return 0;
 }
 
+extern void querylexer_restart(void);
+
 int
 queryparser_parse_from_stdin (void)
 {
@@ -155,14 +157,23 @@ queryparser_parse_from_stdin (void)
 
   yylex_from_stdin = 1;
 
-  printf("> ");
-  fflush(stdout);
+  int err = 0;
 
-  int res = yyparse();
-  assert_inner(!res, "%s: yyparse", queryparser_file);
+  int res;
+  do
+    {
+      printf("> ");
+      fflush(stdout);
+      querylexer_restart();
+      res = yyparse();
+      err |= (res != 0);
+      assert_weak(!res, "%s: yyparse", queryparser_file);
+    }
+  while (res != 0);
+
   yylex_destroy();
 
-  return 0;
+  return -err;
 }
 
 extern unsigned int yylineno;

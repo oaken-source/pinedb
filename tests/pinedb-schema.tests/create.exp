@@ -45,7 +45,7 @@ given an executable "../pinedb/pinedb" \
   when I send "show databases;\r" \
   then I should see "test" \
   when I send "create schema if not exists `test`;\r" \
-  then I should see "ok (skipped):" \
+  then I should see "ok:" \
   when I send "show databases;\r\x04" \
   then I should see "test" \
   and it should return 0

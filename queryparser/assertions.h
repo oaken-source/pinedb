@@ -33,6 +33,8 @@ extern const char *queryparser_file;
 extern unsigned int queryparser_line;
 extern unsigned int queryparser_char;
 
+extern struct timespec queryparser_time;
+
 /* This is a convenience assertion macro for parser specific warnings. It
  * checks the given condition, and prints a suitable warning message to
  * stderr, including the current parser state. It honors the global -Werror

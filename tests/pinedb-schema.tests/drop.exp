@@ -49,11 +49,11 @@ given an executable "../pinedb/pinedb" \
   and it should not return 0 \
   when I run \
   and I send "drop database if exists `test`;\r\x04" \
-  then I should see "ok (skipped):" \
+  then I should see "ok:" \
   and it should return 0 \
   when I run \
   and I send "drop schema if exists `test`;\r\x04" \
-  then I should see "ok (skipped):" \
+  then I should see "ok:" \
   and it should return 0
 
 

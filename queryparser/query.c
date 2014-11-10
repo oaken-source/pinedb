@@ -26,17 +26,25 @@
 
 #include <stdio.h>
 
+#define query_return_result(RES) \
+  do { \
+    printf("ok: [%.8lfs]\n", query_get_elapsed()); \
+    return 0; \
+  } while (0)
+
+static double
+query_get_elapsed (void)
+{
+  return 0;
+}
+
 int
 query_create_schema (const char *name, int strict)
 {
   schema *s = datastore_get_schema_by_name(name);
-  if (strict)
-    parser_assert_err(QUERY_ERR_SCHEMA_CREATE_EEXISTS, !s, name);
-  else if (s)
-    {
-      printf("ok (skipped): [time]");
-      return 0;
-    }
+  parser_assert_err(QUERY_ERR_SCHEMA_CREATE_EEXISTS, !(strict && s), name);
+  if (s)
+    query_return_result(NULL);
 
   s = malloc(sizeof(*s));
   assert_inner(s, "malloc");
@@ -46,28 +54,20 @@ query_create_schema (const char *name, int strict)
   res = datastore_add_schema(s);
   assert_inner(!res, "datastore_add_schema");
 
-  printf("ok: [time]\n");
-
-  return 0;
+  query_return_result(NULL);
 }
 
 int
 query_drop_schema (const char *name, int strict)
 {
   schema *s = datastore_get_schema_by_name(name);
-  if (strict)
-    parser_assert_err(QUERY_ERR_SCHEMA_DROP_NOEXIST, s, name);
-  else if (!s)
-    {
-      printf("ok (skipped): [time]");
-      return 0;
-    }
+  parser_assert_err(QUERY_ERR_SCHEMA_DROP_NOEXIST, !(strict && !s), name);
+  if (!s)
+    query_return_result(NULL);
 
   datastore_remove_schema(s);
 
-  printf("ok: [time]\n");
-
-  return 0;
+  query_return_result(NULL);
 }
 
 int

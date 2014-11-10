@@ -88,3 +88,9 @@ if\ exists          { yylval.l = yylineno; yylval.c = yycharno;
                       return INVALID; }
 
 %%
+
+void
+querylexer_restart (void)
+{
+  YY_FLUSH_BUFFER;
+}
