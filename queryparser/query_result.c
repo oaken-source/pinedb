@@ -83,6 +83,7 @@ query_result_print (const query_result *r)
       int s = w[i % r->width];
       printf(" %*.*s |", s, s, r->items[i]);
     }
+
   printf("\n |");
   for (i = 0; i < total - 2; ++i)
     putchar('-');
@@ -100,6 +101,8 @@ query_result_print (const query_result *r)
   for (i = 0; i < total - 2; ++i)
     putchar('-');
   printf("+\n");
+
+  free(w);
 
   return 0;
 }

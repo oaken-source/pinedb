@@ -33,6 +33,15 @@ struct query_result
 };
 typedef struct query_result query_result;
 
+/* convenience wrapper macro for query_result_push that includes the common
+ * error handling routines
+ */
+#define query_result_push_checked(R, I) \
+    do { \
+      int res = query_result_push((R), (I)); \
+      assert_inner(!res, "query_result_push"); \
+    } while (0)
+
 /* initalize a query_result
  *
  * params:

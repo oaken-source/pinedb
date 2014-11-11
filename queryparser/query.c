@@ -88,15 +88,11 @@ query_show_schemata (void)
   query_result_init(r);
 
   query_result_set_width(r, 1);
-  int res = query_result_push(r, "database");
-  assert_inner(!res, "query_result_push");
+  query_result_push_checked(r, "database");
 
   unsigned int i;
   for (i = 0; i < nschemata; ++i)
-    {
-      res = query_result_push(r, schemata[i]->name);
-      assert_inner(!res, "query_result_push");
-    }
+    query_result_push_checked(r, schemata[i]->name);
 
   query_return_result(r);
 }
