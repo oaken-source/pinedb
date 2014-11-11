@@ -25,44 +25,61 @@
 
 #include <grapes/util.h>
 
-/* execute a create schema query
+struct query_result
+{
+  unsigned int width;
+  const char **items;
+  unsigned int nitems;
+};
+typedef struct query_result query_result;
+
+/* initalize a query_result
  *
  * params:
- *   name - the name of the schema
- *   strict - flag indicating wether the query fail on eexist
- *
- * errors:
- *   may fail and set errno for the same reasons as malloc, schema_init and
- *      datastore_add_schema
- *   will fail if strict evaluates to true and a schema of the same name
- *      already exists
- *
- * returns:
- *   -1 on failure, 0 on success
+ *   r - a pointer to a query_result
  */
-int query_create_schema(const char *name, int strict) may_fail;
+void query_result_init(query_result *r);
 
-/* execute a drop schema query
+/* destroy a query_result and free all associated memory
  *
  * params:
- *   name - the name of the schema
- *   strict - flag indicating wether the query fails on noexist
- *
- * errors:
- *   will fail if strict evaluates to true and a schema of the given name
- *      does not exist
- * returns:
- *   -1 on failure, 0 on success
+ *   r - a pointer to a query_result
  */
-int query_drop_schema(const char *name, int strict) may_fail;
+void query_result_fini(query_result *r);
 
-/* execute a show schemata statement
+/* set the number of columns in a query_result
+ *
+ * params:
+ *   r - a pointer to a query_result
+ *   width - the number of columns
+ */
+void query_result_set_width(query_result *r, unsigned int width);
+
+/* push an item to a query_result
+ *
+ * params:
+ *   r - a pointer to a query result
+ *   item - an item string
  *
  * errors:
- *   may fail and set errno for the same reasons as malloc and
- *      query_result_push
+ *   may fail and set errno for the same reasons as realloc
  *
  * returns:
  *   -1 on failure, 0 on success
  */
-int query_show_schemata(void) may_fail;
+int query_result_push(query_result *r, const char *item) may_fail;
+
+/* print a completed query_result nicely formatted to stdout
+ *
+ * params:
+ *   r - a pointer to a query_result
+ *
+ * errors:
+ *   may fail and set errno for the same reasons as malloc
+ *   the behaviour is undefined if the query_result cotains garbage
+ *
+ * returns:
+ *   -1 on failure, 0 on success
+ */
+int query_result_print(const query_result *r) may_fail;
+

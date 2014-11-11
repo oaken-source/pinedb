@@ -20,6 +20,7 @@
 
 
 #include "query.h"
+#include "query_result.h"
 #include "assertions.h"
 
 #include "datastore/datastore.h"
@@ -29,6 +30,13 @@
 
 #define query_return_result(RES) \
   do { \
+    if (RES) \
+      { \
+        int res = query_result_print(RES); \
+        assert_inner(!res, "query_result_print"); \
+        query_result_fini(RES); \
+        free(RES); \
+      } \
     struct timespec end; \
     clock_gettime(CLOCK_MONOTONIC, &end); \
     double elapsed = (end.tv_sec + 1.0e-9 * end.tv_nsec) - \
@@ -75,12 +83,20 @@ query_show_schemata (void)
   unsigned int nschemata;
   schema **schemata = datastore_get_schemata(&nschemata);
 
-  printf(" databases\n");
-  printf(" ---------\n");
+  query_result *r = malloc(sizeof(*r));
+  assert_inner(r, "malloc");
+  query_result_init(r);
+
+  query_result_set_width(r, 1);
+  int res = query_result_push(r, "database");
+  assert_inner(!res, "query_result_push");
 
   unsigned int i;
   for (i = 0; i < nschemata; ++i)
-    printf(" %s\n", schemata[i]->name);
+    {
+      res = query_result_push(r, schemata[i]->name);
+      assert_inner(!res, "query_result_push");
+    }
 
-  return 0;
+  query_return_result(r);
 }

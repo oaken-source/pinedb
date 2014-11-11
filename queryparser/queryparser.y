@@ -67,7 +67,7 @@
 /* a database script is a list of statements */
 STATEMENTS:
     /* empty */
-  | STATEMENTS STATEMENT SEMICOLON
+  | STATEMENTS STATEMENT
 ;
 
 /* dispatch statements */
@@ -79,14 +79,14 @@ STATEMENT:
 
 /* create schema statement */
 CREATE_STATEMENT:
-    SCHEMA db_name
+    SCHEMA db_name SEMICOLON
       {
         queryparser_entry($2);
         int res = query_create_schema($2.s, 1);
         assert_inner(!res, "query_create_schema");
         free($2.s);
       }
-  | SCHEMA IF_NOT_EXISTS db_name
+  | SCHEMA IF_NOT_EXISTS db_name SEMICOLON
       {
         queryparser_entry($3);
         int res = query_create_schema($3.s, 0);
@@ -97,14 +97,14 @@ CREATE_STATEMENT:
 
 /* drop schema statement */
 DROP_STATEMENT:
-    SCHEMA db_name
+    SCHEMA db_name SEMICOLON
       {
         queryparser_entry($2);
         int res = query_drop_schema($2.s, 1);
         assert_inner(!res, "query_drop_schema");
         free($2.s);
       }
-  | SCHEMA IF_EXISTS db_name
+  | SCHEMA IF_EXISTS db_name SEMICOLON
       {
         queryparser_entry($3);
         int res = query_drop_schema($3.s, 0);
@@ -115,7 +115,7 @@ DROP_STATEMENT:
 
 /* show databases statement */
 SHOW_STATEMENT:
-    SCHEMATA
+    SCHEMATA SEMICOLON
       {
         queryparser_entry($1);
         int res = query_show_schemata();
