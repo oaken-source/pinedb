@@ -1,6 +1,32 @@
 
 # exp_internal 1
 
+set test_name "create and delete schemata"
+given an executable "graprof" \
+  when I run with parameters "-M ../pinedb/pinedb" \
+  and I send "create schema `test1`;\r" \
+  then I should see "ok" \
+  when I send "create schema `test2`;\r" \
+  then I should see "ok" \
+  when I send "create schema `test3`;\r" \
+  then I should see "ok" \
+  when I send "show schemata;\r" \
+  then I should see "database" \
+  and I should see "test1" \
+  and I should see "test2" \
+  and I should see "test3" \
+  when I send "drop schema `test1`;\r" \
+  then I should see "ok" \
+  when I send "drop schema `test2`;\r" \
+  then I should see "ok" \
+  when I send "drop schema `test3`;\r" \
+  then I should see "ok" \
+  when I send "show schemata;\r" \
+  then I should see "database" \
+  and I should see "returned 0 rows" \
+  when I send "\x04" \
+  then I should not see "never freed"
+
 set test_name "create simple schema"
 given an executable "../pinedb/pinedb" \
   when I run \
