@@ -28,20 +28,32 @@
 #include <stdio.h>
 #include <time.h>
 
+
+schema *current_schema = NULL;
+
 #define query_return_result(RES) \
   do { \
     if (RES) \
       { \
         int res = query_result_print(RES); \
         assert_inner(!res, "query_result_print"); \
-        query_result_fini(RES); \
-        free(RES); \
       } \
     struct timespec end; \
     clock_gettime(CLOCK_MONOTONIC, &end); \
     double elapsed = (end.tv_sec + 1.0e-9 * end.tv_nsec) - \
         (queryparser_time.tv_sec + 1.0e-9 * queryparser_time.tv_nsec); \
-    printf("ok: [%.8lfs]\n", elapsed); \
+    if (RES) \
+      { \
+        unsigned int rows = (((query_result*)RES)->nitems - 1) / ((query_result*)RES)->width; \
+        printf("ok: returned %u rows [%.8lfs]\n", rows, elapsed); \
+      } \
+    else \
+      printf("ok: [%.8lfs]\n", elapsed); \
+    if (RES) \
+      { \
+        query_result_fini(RES); \
+        free(RES); \
+      } \
     return 0; \
   } while (0)
 
@@ -95,4 +107,15 @@ query_show_schemata (void)
     query_result_push_checked(r, schemata[i]->name);
 
   query_return_result(r);
+}
+
+int
+query_use (const char *name)
+{
+  schema *s = datastore_get_schema_by_name(name);
+  parser_assert_err(QUERY_ERR_SCHEMA_USE_NOEXIST, s, name);
+
+  current_schema = s;
+
+  query_return_result(NULL);
 }

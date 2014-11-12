@@ -58,8 +58,8 @@ query_result_push (query_result *r, const char *item)
 int
 query_result_print (const query_result *r)
 {
-  size_t *w = malloc(sizeof(*w) * r->width);
-  assert_inner(w, "malloc");
+  size_t *w = calloc(r->width, sizeof(*w));
+  assert_inner(w, "calloc");
 
   size_t i;
   for (i = 0; i < r->nitems; ++i)

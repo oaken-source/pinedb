@@ -66,3 +66,16 @@ int query_drop_schema(const char *name, int strict) may_fail;
  *   -1 on failure, 0 on success
  */
 int query_show_schemata(void) may_fail;
+
+/* execute a use statement
+ *
+ * params:
+ *   name - the name of the schema
+ *
+ * errors:
+ *   may fail if a schema of the given name does not exist
+ *
+ * returns:
+ *   -1 on failure, 0 on success
+ */
+int query_use (const char *name) may_fail;

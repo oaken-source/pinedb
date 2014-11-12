@@ -58,7 +58,9 @@
 
 %}
 
-%token CREATE DROP SHOW SCHEMA SCHEMATA IF_NOT_EXISTS IF_EXISTS db_name SEMICOLON INVALID
+%token CREATE DROP SHOW USE SCHEMA SCHEMATA IF_NOT_EXISTS IF_EXISTS db_name SEMICOLON INVALID
+
+%destructor { free($$.s); } db_name
 
 %error-verbose
 
@@ -75,6 +77,7 @@ STATEMENT:
     CREATE CREATE_STATEMENT
   | DROP DROP_STATEMENT
   | SHOW SHOW_STATEMENT
+  | USE USE_STATEMENT
 ;
 
 /* create schema statement */
@@ -83,15 +86,15 @@ CREATE_STATEMENT:
       {
         queryparser_entry($2);
         int res = query_create_schema($2.s, 1);
-        assert_inner(!res, "query_create_schema");
         free($2.s);
+        assert_inner(!res, "query_create_schema");
       }
   | SCHEMA IF_NOT_EXISTS db_name SEMICOLON
       {
         queryparser_entry($3);
         int res = query_create_schema($3.s, 0);
-        assert_inner(!res, "query_create_schema");
         free($3.s);
+        assert_inner(!res, "query_create_schema");
       }
 ;
 
@@ -101,15 +104,15 @@ DROP_STATEMENT:
       {
         queryparser_entry($2);
         int res = query_drop_schema($2.s, 1);
-        assert_inner(!res, "query_drop_schema");
         free($2.s);
+        assert_inner(!res, "query_drop_schema");
       }
   | SCHEMA IF_EXISTS db_name SEMICOLON
       {
         queryparser_entry($3);
         int res = query_drop_schema($3.s, 0);
-        assert_inner(!res, "query_drop_schema");
         free($3.s);
+        assert_inner(!res, "query_drop_schema");
       }
 ;
 
@@ -120,6 +123,17 @@ SHOW_STATEMENT:
         queryparser_entry($1);
         int res = query_show_schemata();
         assert_inner(!res, "query_show_schemata");
+      }
+;
+
+/* use statement */
+USE_STATEMENT:
+    db_name SEMICOLON
+      {
+        queryparser_entry($1);
+        int res = query_use($1.s);
+        free($1.s);
+        assert_inner(!res, "query_use");
       }
 ;
 

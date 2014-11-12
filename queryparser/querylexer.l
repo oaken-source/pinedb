@@ -54,6 +54,9 @@ drop                { yylval.l = yylineno; yylval.c = yycharno;
 show                { yylval.l = yylineno; yylval.c = yycharno;
                       yycharno += yyleng;
                       return SHOW; }
+use                 { yylval.l = yylineno; yylval.c = yycharno;
+                      yycharno += yyleng;
+                      return USE; }
 database|schema     { yylval.l = yylineno; yylval.c = yycharno;
                       yycharno += yyleng;
                       return SCHEMA; }

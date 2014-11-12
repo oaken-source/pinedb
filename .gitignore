@@ -35,3 +35,6 @@ stamp-h1
 *.log
 *.sum
 site.*
+
+# distcheck generated files
+pinedb-*
