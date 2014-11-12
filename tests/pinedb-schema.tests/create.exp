@@ -1,106 +1,86 @@
 
 # exp_internal 1
 
-set test_name "create and delete schemata"
-given an executable "graprof" \
-  when I run with parameters "-M ../pinedb/pinedb" \
-  and I send "create schema `test1`;\r" \
-  then I should see "ok" \
-  when I send "create schema `test2`;\r" \
-  then I should see "ok" \
-  when I send "create schema `test3`;\r" \
-  then I should see "ok" \
-  when I send "show schemata;\r" \
-  then I should see "database" \
-  and I should see "test1" \
-  and I should see "test2" \
-  and I should see "test3" \
-  when I send "drop schema `test1`;\r" \
-  then I should see "ok" \
-  when I send "drop schema `test2`;\r" \
-  then I should see "ok" \
-  when I send "drop schema `test3`;\r" \
-  then I should see "ok" \
-  when I send "show schemata;\r" \
-  then I should see "database" \
-  and I should see "returned 0 rows" \
-  when I send "\x04" \
-  then I should not see "never freed"
-
-set test_name "create simple schema"
+set test_name "create a non-existing schema"
 given an executable "../pinedb/pinedb" \
   when I run \
   and I send "create schema `test`;\r" \
-  then I should see "ok:" \
-  when I send "show databases;\r\x04" \
-  then I should see "test" \
-  and it should return 0 \
-  when I run \
-  and I send "create schema if not exists `test`;\r" \
-  then I should see "ok:" \
-  when I send "show databases;\r\x04" \
+  then I should see "ok" \
+  when I send "show schemata;\r\x04" \
   then I should see "test" \
   and it should return 0 \
   when I run \
   and I send "create database `test`;\r" \
-  then I should see "ok:" \
+  then I should see "ok" \
   when I send "show databases;\r\x04" \
   then I should see "test" \
   and it should return 0 \
   when I run \
-  and I send "create database if not exists `test`;\r" \
-  then I should see "ok:" \
+  and I send "create schema test;\r" \
+  then I should see "ok" \
+  when I send "show schemata;\r\x04" \
+  then I should see "test" \
+  and it should return 0 \
+  when I run \
+  and I send "create database test;\r" \
+  then I should see "ok" \
   when I send "show databases;\r\x04" \
   then I should see "test" \
   and it should return 0
 
 
-set test_name "create duplicate schema"
+set test_name "create an existing schema"
 given an executable "../pinedb/pinedb" \
   when I run \
   and I send "create schema `test`;\r" \
-  then I should see "ok:" \
-  when I send "show databases;\r" \
-  then I should see "test" \
-  when I send "create schema `test`;\r\x04" \
+  then I should see "ok" \
+  when I send "create schema `test`;\r" \
   then I should see "unable to create schema `test`: already exists" \
+  when I send "create schema if not exists `test`;\r\x04" \
+  then I should see "ok" \
   and it should not return 0 \
   when I run \
-  and I send "create schema `test`;\r" \
-  then I should see "ok:" \
-  when I send "show databases;\r" \
-  then I should see "test" \
-  when I send "create schema if not exists `test`;\r" \
-  then I should see "ok:" \
-  when I send "show databases;\r\x04" \
-  then I should see "test" \
-  and it should return 0
+  and I send "create database `test`;\r" \
+  then I should see "ok" \
+  when I send "create database `test`;\r" \
+  then I should see "unable to create schema `test`: already exists" \
+  when I send "create database if not exists `test`;\r\x04" \
+  then I should see "ok" \
+  and it should not return 0 \
+  when I run \
+  and I send "create schema test;\r" \
+  then I should see "ok" \
+  when I send "create schema test;\r" \
+  then I should see "unable to create schema `test`: already exists" \
+  when I send "create schema if not exists test;\r\x04" \
+  then I should see "ok" \
+  and it should not return 0 \
+  when I run \
+  and I send "create database test;\r" \
+  then I should see "ok" \
+  when I send "create database test;\r" \
+  then I should see "unable to create schema `test`: already exists" \
+  when I send "create database if not exists test;\r\x04" \
+  then I should see "ok" \
+  and it should not return 0
 
 
 set test_name "create multiple schemata"
 given an executable "../pinedb/pinedb" \
   when I run \
-  and I send "create schema `test1`;\r" \
-  then I should see "ok:" \
-  when I send "create schema `test2`;\r" \
-  then I should see "ok:" \
-  when I send "show databases;\r\x04" \
-  then I should see "test1" \
-  and I should see "test2" \
-  and it should return 0
-
-
-set test_name "create schema with weird name"
-given an executable "../pinedb/pinedb" \
-  when I run \
-  and I send "create schema test;\r" \
-  then I should see "ok:" \
-  when I send "create schema te-st;\r\x04" \
-  then I should see "syntax error" \
-  and it should not return 0 \
-  when I run \
-  and I send "create schema `te-st`;\r\x04" \
-  then I should see "ok:" \
+  and I send "create database test1;\r" \
+  then I should see "ok" \
+  when I send "create database test2;\r" \
+  then I should see "ok" \
+  when I send "create database test3;\r" \
+  then I should see "ok" \
+  when I send "create database test4;\r" \
+  then I should see "ok" \
+  when I send "create database test5;\r" \
+  then I should see "ok" \
+  when I send "show schemata;\r\x04" \
+  then I should see "database" \
+  and I should see "returned 5 rows" \
   and it should return 0
 
 

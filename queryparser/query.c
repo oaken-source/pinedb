@@ -86,6 +86,9 @@ query_drop_schema (const char *name, int strict)
 
   datastore_remove_schema(s);
 
+  if (current_schema == s)
+    current_schema = NULL;
+
   query_return_result(NULL);
 }
 
