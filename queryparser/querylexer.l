@@ -24,7 +24,7 @@
 
   struct yystoken
   {
-    char *s;
+    void *v;
     unsigned int l;
     unsigned int c;
   };
@@ -38,6 +38,8 @@
   unsigned int yycharno = 0;
   unsigned int yylex_from_stdin = 0;
 
+  #define common_setup do { yylval.l = yylineno; yylval.c = yycharno; yycharno += yyleng; } while (0)
+
 }
 
 %%
@@ -45,50 +47,50 @@
 #.*                 /* ignore comments */
 --.*                /* ignore comments */
 
-create              { yylval.l = yylineno; yylval.c = yycharno;
-                      yycharno += yyleng;
-                      return CREATE; }
-drop                { yylval.l = yylineno; yylval.c = yycharno;
-                      yycharno += yyleng;
-                      return DROP; }
-show                { yylval.l = yylineno; yylval.c = yycharno;
-                      yycharno += yyleng;
-                      return SHOW; }
-use                 { yylval.l = yylineno; yylval.c = yycharno;
-                      yycharno += yyleng;
-                      return USE; }
-database|schema     { yylval.l = yylineno; yylval.c = yycharno;
-                      yycharno += yyleng;
-                      return SCHEMA; }
-databases|schemata  { yylval.l = yylineno; yylval.c = yycharno;
-                      yycharno += yyleng;
-                      return SCHEMATA; }
-if\ not\ exists     { yylval.l = yylineno; yylval.c = yycharno;
-                      yycharno += yyleng;
-                      return IF_NOT_EXISTS; }
-if\ exists          { yylval.l = yylineno; yylval.c = yycharno;
-                      yycharno += yyleng;
-                      return IF_EXISTS; }
+create              { common_setup; return CREATE; }
+drop                { common_setup; return DROP; }
+show                { common_setup; return SHOW; }
+use                 { common_setup; return USE; }
+database|schema     { common_setup; return SCHEMA; }
+databases|schemata  { common_setup; return SCHEMATA; }
+table               { common_setup; return TABLE; }
+tables              { common_setup; return TABLES; }
+int                 { common_setup; return INT; }
+varchar             { common_setup; return VARCHAR; }
+if\ not\ exists     { common_setup; return IF_NOT_EXISTS; }
+if\ exists          { common_setup; return IF_EXISTS; }
 
-`.*`                { yytext[yyleng - 1] = 0;
-                      yylval.s = strdup(yytext + 1); yylval.l = yylineno; yylval.c = yycharno;
-                      yycharno += yyleng;
-                      return db_name; }
-[a-zA-Z0-9$_]*      { yylval.s = strdup(yytext); yylval.l = yylineno; yylval.c = yycharno;
-                      yycharno += yyleng;
-                      return db_name; }
+`.*`                { common_setup;
+                      yytext[yyleng - 1] = 0;
+                      yylval.v = strdup(yytext + 1);
+                      return identifier; }
+0[0-9]+             { common_setup;
+                      int errnum = errno;
+                      yylval.v = (void*)strtol(yytext, NULL, 8);
+                      errno = errnum;
+                      return number; }
+0x[0-9a-f]+         { common_setup;
+                      int errnum = errno;
+                      yylval.v = (void*)strtol(yytext, NULL, 16);
+                      errno = errnum;
+                      return number; }
+[0-9]+              { common_setup;
+                      int errnum = errno;
+                      yylval.v = (void*)strtol(yytext, NULL, 10);
+                      errno = errnum;
+                      return number; }
+[a-zA-Z0-9$_]+      { common_setup;
+                      yylval.v = strdup(yytext);
+                      return identifier; }
 
-;                   { yylval.l = yylineno; yylval.c = yycharno;
-                      yycharno += yyleng;
-                      return SEMICOLON; }
+;                   { common_setup; return SEMICOLON; }
+\(                  { common_setup; return LPAREN; }
+\)                  { common_setup; return RPAREN; }
 
-\n                  { yycharno = 0;
-                      if (yylex_from_stdin) { printf("> "); fflush(stdout); } yycharno = 0; }
+\n                  { yycharno = 0; if (yylex_from_stdin) { printf("> "); fflush(stdout); } }
 [ \r\t]*            { yycharno += yyleng; }
 
-.                   { yylval.l = yylineno; yylval.c = yycharno;
-                      yycharno += yyleng;
-                      return INVALID; }
+.                   { common_setup; return INVALID; }
 
 %%
 

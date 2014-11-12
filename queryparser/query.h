@@ -79,3 +79,7 @@ int query_show_schemata(void) may_fail;
  *   -1 on failure, 0 on success
  */
 int query_use (const char *name) may_fail;
+
+int query_create_table (const char *name, int strict, void *columns, void *options) may_fail;
+
+int query_drop_table (const char *name, int strict) may_fail;

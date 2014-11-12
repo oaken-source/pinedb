@@ -33,7 +33,7 @@
 
   struct yystoken
   {
-    char *s;
+    void *v;
     unsigned int l;
     unsigned int c;
   };
@@ -58,66 +58,104 @@
 
 %}
 
-%token CREATE DROP SHOW USE SCHEMA SCHEMATA IF_NOT_EXISTS IF_EXISTS db_name SEMICOLON INVALID
+%token CREATE DROP SHOW USE SCHEMA SCHEMATA TABLE TABLES INT VARCHAR IF_NOT_EXISTS IF_EXISTS identifier
+%token SEMICOLON LPAREN RPAREN INVALID
+%token identifier, number
 
-%destructor { free($$.s); } db_name
+%destructor { free($$.v); } identifier
 
 %error-verbose
 
 %%
 
-/* a database script is a list of statements */
-STATEMENTS:
+NT_STATEMENTS:
     /* empty */
-  | STATEMENTS STATEMENT
+  | NT_STATEMENTS NT_STATEMENT
 ;
 
-/* dispatch statements */
-STATEMENT:
-    CREATE CREATE_STATEMENT
-  | DROP DROP_STATEMENT
-  | SHOW SHOW_STATEMENT
-  | USE USE_STATEMENT
+NT_STATEMENT:
+    CREATE NT_CREATE_STATEMENT
+  | DROP NT_DROP_STATEMENT
+  | SHOW NT_SHOW_STATEMENT
+  | USE NT_USE_STATEMENT
 ;
 
-/* create schema statement */
-CREATE_STATEMENT:
-    SCHEMA db_name SEMICOLON
-      {
-        queryparser_entry($2);
-        int res = query_create_schema($2.s, 1);
-        free($2.s);
-        assert_inner(!res, "query_create_schema");
-      }
-  | SCHEMA IF_NOT_EXISTS db_name SEMICOLON
+NT_CREATE_STATEMENT:
+    SCHEMA NT_IF_NOT_EXISTS identifier SEMICOLON
       {
         queryparser_entry($3);
-        int res = query_create_schema($3.s, 0);
-        free($3.s);
+        int res = query_create_schema($3.v, !$2.v);
+        free($3.v);
         assert_inner(!res, "query_create_schema");
       }
-;
-
-/* drop schema statement */
-DROP_STATEMENT:
-    SCHEMA db_name SEMICOLON
-      {
-        queryparser_entry($2);
-        int res = query_drop_schema($2.s, 1);
-        free($2.s);
-        assert_inner(!res, "query_drop_schema");
-      }
-  | SCHEMA IF_EXISTS db_name SEMICOLON
+  | TABLE NT_IF_NOT_EXISTS identifier NT_CREATE_DEFINITIONS NT_TABLE_OPTIONS SEMICOLON
       {
         queryparser_entry($3);
-        int res = query_drop_schema($3.s, 0);
-        free($3.s);
-        assert_inner(!res, "query_drop_schema");
+        int res = query_create_table($3.v, !$2.v, $4.v, $5.v);
+        free($3.v);
+        assert_inner(!res, "query_create_table");
       }
 ;
 
-/* show databases statement */
-SHOW_STATEMENT:
+NT_CREATE_DEFINITIONS:
+    NT_CREATE_DEFINITION
+  | NT_CREATE_DEFINITIONS NT_CREATE_DEFINITION
+;
+
+NT_CREATE_DEFINITION:
+    identifier NT_COLUMN_DEFINITION
+;
+
+NT_COLUMN_DEFINITION:
+    NT_DATATYPE
+;
+
+NT_DATATYPE:
+    INT NT_LENGTH
+  | VARCHAR NT_LENGTH
+;
+
+NT_LENGTH:
+    LPAREN  RPAREN
+;
+
+NT_TABLE_OPTIONS:
+    /* empty */
+  | NT_TABLE_OPTIONS NT_TABLE_OPTION
+;
+
+NT_TABLE_OPTION:
+    /* empty */
+;
+
+NT_IF_NOT_EXISTS:
+    /* empty */     { $$.v = (void*)0; }
+  | IF_NOT_EXISTS   { $$.v = (void*)1; }
+;
+
+NT_DROP_STATEMENT:
+    SCHEMA NT_IF_EXISTS identifier SEMICOLON
+      {
+        queryparser_entry($3);
+        int res = query_drop_schema($3.v, !$2.v);
+        free($3.v);
+        assert_inner(!res, "query_drop_schema");
+      }
+  | TABLE NT_IF_EXISTS identifier SEMICOLON
+      {
+        queryparser_entry($3);
+        int res = query_drop_table($3.v, !$2.v);
+        free($3.v);
+        assert_inner(!res, "query_drop_table");
+      }
+;
+
+NT_IF_EXISTS:
+    /* empty */     { $$.v = (void*)0; }
+  | IF_EXISTS       { $$.v = (void*)1; }
+;
+
+NT_SHOW_STATEMENT:
     SCHEMATA SEMICOLON
       {
         queryparser_entry($1);
@@ -126,13 +164,12 @@ SHOW_STATEMENT:
       }
 ;
 
-/* use statement */
-USE_STATEMENT:
-    db_name SEMICOLON
+NT_USE_STATEMENT:
+    identifier SEMICOLON
       {
         queryparser_entry($1);
-        int res = query_use($1.s);
-        free($1.s);
+        int res = query_use($1.v);
+        free($1.v);
         assert_inner(!res, "query_use");
       }
 ;

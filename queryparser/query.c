@@ -122,3 +122,15 @@ query_use (const char *name)
 
   query_return_result(NULL);
 }
+
+int
+query_create_table (unused const char *name, unused int strict, unused void *columns, unused void *options)
+{
+  query_return_result(NULL);
+}
+
+int
+query_drop_table (unused const char *name, unused int strict)
+{
+  query_return_result(NULL);
+}
