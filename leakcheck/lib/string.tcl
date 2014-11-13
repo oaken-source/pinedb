@@ -18,58 +18,19 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- # This file contains the step pretty print methods of asparagus.
+ # This file contains the string utilities used by asparagus.
  ##############################################################################
 
-# print a passed step to the output stream, cucumber style, and call `pass'
-#   if in verbose mode, print the complete step message, else only '.'
-proc pass_step { str } {
+# test if a string starts with a given string
+proc string_starts_with { haystack needle } {
 
-  send_log "PASS: $str\n"
-  if { [ info exists ::env(VERBOSE) ] } {
-    puts "\033\[00;32m$str\033\[0m"
-  } else {
-    puts -nonewline "\033\[00;32m.\033\[0m"
-    flush stdout
-  }
-
-  incr_count PASS
+  return [string equal -nocase -length [string length "$needle"] "$haystack" "$needle"]
 
 }
 
-# print a failed step to the output stream, and call `fail'
-proc fail_step { str } {
+# remove a string from the start of another string
+proc string_pop { haystack needle } {
 
-  global test_name
-
-  send_log "FAIL: $test_name : $str\n"
-  if { [ info exists ::env(VERBOSE) ] } {
-    puts "\033\[00;31m$str\033\[0m"
-  } else {
-    puts -nonewline "\033\[00;31mF\033\[0m"
-    flush stdout
-  }
-
-  incr_count FAIL
-
-  global exit_status
-  set exit_status 1
-}
-
-# this is used when something is wrong - syntax errors and the likes.
-#   print the message to the output stream and exit the test
-proc fail_fatal { str } {
-
-  global test_name
-
-  if { [ string length "$str" ] < 64 } {
-    send_user "\n\033\[00;31m!!!! FATAL : $test_name : $str\033\[0m\n"
-  } else {
-    send_user "\n\033\[00;31m!!!! FATAL : $test_name : [string range \"$str\" 0 60]...\033\[0m\n"
-  }
-
-  exit 1
+  return [string range "$haystack" [string length "$needle"] [string length "$haystack"]]
 
 }
-
-

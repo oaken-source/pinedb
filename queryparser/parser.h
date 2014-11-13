@@ -74,6 +74,8 @@ enum error_types
   #define QUERY_ERR_SCHEMA_CREATE_EEXISTS_STR "unable to create schema `%s`: already exists"
   QUERY_ERR_SCHEMA_DROP_NOEXIST,
   #define QUERY_ERR_SCHEMA_DROP_NOEXIST_STR "unable to drop schema `%s`: does not exist"
-  QUERY_ERR_SCHEMA_USE_NOEXIST
+  QUERY_ERR_SCHEMA_USE_NOEXIST,
   #define QUERY_ERR_SCHEMA_USE_NOEXIST_STR "unable to use schema `%s`: does not exist"
+  QUERY_ERR_CONVERSION
+  #define QUERY_ERR_CONVERSION_STR "`%s'"
 };

@@ -31,6 +31,15 @@
   typedef struct yystoken yystoken;
 
   #define YYSTYPE yystoken
+
+  #include <stdlib.h>
+  #include <stdio.h>
+  #include <readline/readline.h>
+  #include <readline/history.h>
+
+  static int querylexer_input(char *buf, size_t size);
+  #define YY_INPUT(buf,result,max_size) result = querylexer_input(buf, max_size);
+
   #include "queryparser.h"
 
   #include <grapes/util.h>
@@ -60,42 +69,57 @@ varchar             { common_setup; return VARCHAR; }
 if\ not\ exists     { common_setup; return IF_NOT_EXISTS; }
 if\ exists          { common_setup; return IF_EXISTS; }
 
-`.*`                { common_setup;
+`[^`]*`                { common_setup;
                       yytext[yyleng - 1] = 0;
                       yylval.v = strdup(yytext + 1);
-                      return identifier; }
-0[0-9]+             { common_setup;
-                      int errnum = errno;
-                      yylval.v = (void*)strtol(yytext, NULL, 8);
-                      errno = errnum;
-                      return number; }
-0x[0-9a-f]+         { common_setup;
-                      int errnum = errno;
-                      yylval.v = (void*)strtol(yytext, NULL, 16);
-                      errno = errnum;
-                      return number; }
-[0-9]+              { common_setup;
-                      int errnum = errno;
-                      yylval.v = (void*)strtol(yytext, NULL, 10);
-                      errno = errnum;
-                      return number; }
+                      return BT_IDENTIFIER; }
+[1-9][0-9]*         { common_setup;
+                      yylval.v = strdup(yytext);
+                      return NUMBER; }
 [a-zA-Z0-9$_]+      { common_setup;
                       yylval.v = strdup(yytext);
-                      return identifier; }
+                      return IDENTIFIER; }
 
-;                   { common_setup; return SEMICOLON; }
-\(                  { common_setup; return LPAREN; }
-\)                  { common_setup; return RPAREN; }
-
-\n                  { yycharno = 0; if (yylex_from_stdin) { printf("> "); fflush(stdout); } }
+\n                  { yycharno = 0; }
 [ \r\t]*            { yycharno += yyleng; }
 
-.                   { common_setup; return INVALID; }
+.                   { common_setup; return yytext[0]; }
 
 %%
+
+#undef common_setup
 
 void
 querylexer_restart (void)
 {
+  yylineno = 0;
   YY_FLUSH_BUFFER;
+}
+
+static int
+querylexer_input (char *buf, size_t size)
+{
+  char *line;
+  if (feof(yyin))
+    return YY_NULL;
+  line = readline("> ");
+  if (!line)
+    return YY_NULL;
+  if (strlen(line) > size - 2)
+  {
+    perror("input line too long");
+    return YY_NULL;
+  }
+  strcpy(buf, line);
+  free(line);
+  add_history(buf);
+
+  return strlen(buf);
+}
+
+static void
+__attribute__((destructor))
+querylexer_fini (void)
+{
+  clear_history();
 }

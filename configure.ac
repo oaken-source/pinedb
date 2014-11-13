@@ -33,6 +33,7 @@ AC_CONFIG_FILES([
   queryparser/Makefile
   datastore/Makefile
   pinedb/Makefile
-  tests/Makefile])
+  tests/Makefile
+  leakcheck/Makefile])
 
 AC_OUTPUT

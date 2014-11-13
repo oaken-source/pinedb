@@ -28,6 +28,7 @@
 
   #include <stdio.h>
   #include <time.h>
+  #include <stdint.h>
 
   #define YYSTYPE yystoken
 
@@ -59,36 +60,36 @@
 %}
 
 %token CREATE DROP SHOW USE SCHEMA SCHEMATA TABLE TABLES INT VARCHAR IF_NOT_EXISTS IF_EXISTS identifier
-%token SEMICOLON LPAREN RPAREN INVALID
-%token identifier, number
+%token IDENTIFIER BT_IDENTIFIER NUMBER
 
-%destructor { free($$.v); } identifier
+%destructor { free($$.v); } IDENTIFIER BT_IDENTIFIER NUMBER
 
 %error-verbose
 
 %%
 
-NT_STATEMENTS:
+/*  */
+nt_statements:
     /* empty */
-  | NT_STATEMENTS NT_STATEMENT
+  | nt_statements nt_statement
 ;
 
-NT_STATEMENT:
-    CREATE NT_CREATE_STATEMENT
-  | DROP NT_DROP_STATEMENT
-  | SHOW NT_SHOW_STATEMENT
-  | USE NT_USE_STATEMENT
+nt_statement:
+    CREATE nt_create_statement
+  | DROP nt_drop_statement
+  | SHOW nt_show_statement
+  | USE nt_use_statement
 ;
 
-NT_CREATE_STATEMENT:
-    SCHEMA NT_IF_NOT_EXISTS identifier SEMICOLON
+nt_create_statement:
+    SCHEMA nt_if_not_exists nt_db_name nt_schema_create_definitions ';'
       {
         queryparser_entry($3);
         int res = query_create_schema($3.v, !$2.v);
         free($3.v);
         assert_inner(!res, "query_create_schema");
       }
-  | TABLE NT_IF_NOT_EXISTS identifier NT_CREATE_DEFINITIONS NT_TABLE_OPTIONS SEMICOLON
+  | TABLE nt_if_not_exists nt_tbl_name '(' nt_table_create_definitions ')' nt_table_options ';'
       {
         queryparser_entry($3);
         int res = query_create_table($3.v, !$2.v, $4.v, $5.v);
@@ -97,51 +98,133 @@ NT_CREATE_STATEMENT:
       }
 ;
 
-NT_CREATE_DEFINITIONS:
-    NT_CREATE_DEFINITION
-  | NT_CREATE_DEFINITIONS NT_CREATE_DEFINITION
-;
-
-NT_CREATE_DEFINITION:
-    identifier NT_COLUMN_DEFINITION
-;
-
-NT_COLUMN_DEFINITION:
-    NT_DATATYPE
-;
-
-NT_DATATYPE:
-    INT NT_LENGTH
-  | VARCHAR NT_LENGTH
-;
-
-NT_LENGTH:
-    LPAREN  RPAREN
-;
-
-NT_TABLE_OPTIONS:
+nt_if_not_exists:
     /* empty */
-  | NT_TABLE_OPTIONS NT_TABLE_OPTION
+      {
+        $$.v = (void*)0;
+      }
+  | IF_NOT_EXISTS
+      {
+        $$.v = (void*)1;
+      }
 ;
 
-NT_TABLE_OPTION:
+nt_db_name:
+    IDENTIFIER
+      {
+        $$ = $1;
+      }
+  | BT_IDENTIFIER
+      {
+        $$ = $1;
+      }
+;
+
+nt_schema_create_definitions:
+    /* FIXME: none are supported yet */
+;
+
+nt_tbl_name:
+    IDENTIFIER
+      {
+        $$ = $1;
+      }
+  | BT_IDENTIFIER
+      {
+        $$ = $1;
+      }
+;
+
+nt_table_create_definitions:
+    nt_table_create_definition
+  | nt_table_create_definitions ',' nt_table_create_definition
+;
+
+nt_table_create_definition:
+    nt_col_name nt_column_definition
+;
+
+nt_col_name:
+    IDENTIFIER
+      {
+        $$ = $1;
+      }
+  | BT_IDENTIFIER
+      {
+        $$ = $1;
+      }
+;
+
+nt_column_definition:
+    nt_data_type
+;
+
+nt_data_type:
+    INT nt_optional_length
+      {
+        unused long int length = 11;
+        if ($2.v)
+          {
+            int errnum = errno;
+            errno = 0;
+            length = strtol($2.v, NULL, 10);
+            queryparser_entry($2);
+            parser_assert_err(QUERY_ERR_CONVERSION, errno != EINVAL && errno != ERANGE, $2.v);
+            errno = errnum;
+          }
+      }
+  | VARCHAR nt_length
+      {
+        unused long int length;
+        int errnum = errno;
+        errno = 0;
+        length = strtol($2.v, NULL, 10);
+        queryparser_entry($2);
+        parser_assert_err(QUERY_ERR_CONVERSION, errno != EINVAL && errno != ERANGE, $2.v);
+        errno = errnum;
+      }
+;
+
+nt_optional_length:
     /* empty */
+      {
+        $$.v = NULL;
+      }
+  | nt_length
+      {
+        $$ = $1;
+      }
 ;
 
-NT_IF_NOT_EXISTS:
-    /* empty */     { $$.v = (void*)0; }
-  | IF_NOT_EXISTS   { $$.v = (void*)1; }
+nt_length:
+    '(' NUMBER ')'
+      {
+        $$ = $2;
+      }
+;
+nt_table_options:
+    /* empty */
+  | nt_table_options_list
 ;
 
-NT_DROP_STATEMENT:
-    SCHEMA NT_IF_EXISTS identifier SEMICOLON
+nt_table_options_list:
+    nt_table_option
+  | nt_table_options ',' nt_table_option
+;
+
+nt_table_option:
+    /* FIXME: none are supported yet */
+;
+
+nt_drop_statement:
+    SCHEMA nt_if_exists nt_db_name ';'
       {
         queryparser_entry($3);
         int res = query_drop_schema($3.v, !$2.v);
         free($3.v);
         assert_inner(!res, "query_drop_schema");
       }
-  | TABLE NT_IF_EXISTS identifier SEMICOLON
+  | TABLE nt_if_exists nt_tbl_name ';'
       {
         queryparser_entry($3);
         int res = query_drop_table($3.v, !$2.v);
@@ -150,13 +233,19 @@ NT_DROP_STATEMENT:
       }
 ;
 
-NT_IF_EXISTS:
-    /* empty */     { $$.v = (void*)0; }
-  | IF_EXISTS       { $$.v = (void*)1; }
+nt_if_exists:
+    /* empty */
+      {
+        $$.v = (void*)0;
+      }
+  | IF_EXISTS
+      {
+        $$.v = (void*)1;
+      }
 ;
 
-NT_SHOW_STATEMENT:
-    SCHEMATA SEMICOLON
+nt_show_statement:
+    SCHEMATA ';'
       {
         queryparser_entry($1);
         int res = query_show_schemata();
@@ -164,8 +253,8 @@ NT_SHOW_STATEMENT:
       }
 ;
 
-NT_USE_STATEMENT:
-    identifier SEMICOLON
+nt_use_statement:
+    nt_db_name ';'
       {
         queryparser_entry($1);
         int res = query_use($1.v);
@@ -175,6 +264,8 @@ NT_USE_STATEMENT:
 ;
 
 %%
+
+#undef queryparser_entry
 
 extern void yy_scan_string(const char *data);
 extern void yylex_destroy(void);
@@ -213,8 +304,6 @@ queryparser_parse_from_stdin (void)
   int res;
   do
     {
-      printf("> ");
-      fflush(stdout);
       querylexer_restart();
       res = yyparse();
       err |= (res != 0);
@@ -223,6 +312,8 @@ queryparser_parse_from_stdin (void)
   while (res != 0);
 
   yylex_destroy();
+
+  printf("\n");
 
   return -err;
 }

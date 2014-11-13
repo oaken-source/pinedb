@@ -4,3 +4,10 @@
 ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = grapes queryparser datastore pinedb tests
+
+if PROFILING
+
+SUBDIRS += leakcheck
+
+endif ## PROFILING
+
