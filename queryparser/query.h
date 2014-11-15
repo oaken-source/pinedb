@@ -27,71 +27,80 @@
 
 #include <grapes/util.h>
 
-struct query_arg
+union query_arg
 {
   int boolean;
   char *string;
   void *pointer;
 };
-typedef struct query_arg query_arg;
+typedef union query_arg query_arg;
 
 /* execute a create schema query
  *
  * params:
- *   name - the name of the schema
- *   strict - flag indicating wether the query fail on eexist
+ *   args[0] <string>  - the name of the schema
+ *   args[1] <boolean> - flag indicating wether the query fail on eexist
  *
  * errors:
- *   may fail and set errno for the same reasons as malloc, schema_init and
- *      datastore_add_schema
+ *   may fail and set errno for the same reasons as query_result_create,
+ *      schema_create and datastore_add_schema
  *   will fail if strict evaluates to true and a schema of the same name
  *      already exists
  *
  * returns:
- *   -1 on failure, 0 on success
+ *   a pointer to a query_result on success, NULL on failure
  */
 query_result* query_create_schema(query_arg *args) may_fail;
 
 /* execute a drop schema query
  *
  * params:
- *   name - the name of the schema
- *   strict - flag indicating wether the query fails on noexist
+ *   args[0] <string>  - the name of the schema
+ *   args[1] <boolean> - flag indicating wether the query fails on noexist
  *
  * errors:
+ *   may fail and set errno for the same reasons as query_result_create
  *   will fail if strict evaluates to true and a schema of the given name
  *      does not exist
+ *
  * returns:
- *   -1 on failure, 0 on success
+ *   a pointer to a query_result on success, NULL on failure
  */
 query_result* query_drop_schema(query_arg *args) may_fail;
 
 /* execute a show schemata statement
  *
+ * params:
+ *   none
+ *
  * errors:
- *   may fail and set errno for the same reasons as malloc and
+ *   may fail and set errno for the same reasons as query_result_create and
  *      query_result_push
  *
  * returns:
- *   -1 on failure, 0 on success
+ *   a pointer to a query_result on success, NULL on failure
  */
 query_result* query_show_schemata(query_arg *args) may_fail;
 
 /* execute a use statement
  *
  * params:
- *   name - the name of the schema
+ *   args[0] <string>  - the name of the schema
  *
  * errors:
- *   may fail if a schema of the given name does not exist
+ *   may fail and set errno for the same reasons as query_result_create
+ *   will fail if a schema of the given name does not exist
  *
  * returns:
- *   -1 on failure, 0 on success
+ *   q pointer to a query_result on success, NULL on failure
  */
 query_result* query_use (query_arg *args) may_fail;
 
+/* FIXME: in the making */
 query_result* query_create_table (query_arg *args) may_fail;
 
+/* FIXME: in the making */
 query_result* query_drop_table (query_arg *args) may_fail;
 
+/* FIXME: in the making */
 query_result* query_show_tables (query_arg *args) may_fail;

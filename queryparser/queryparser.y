@@ -30,15 +30,12 @@
   #include <time.h>
   #include <stdint.h>
 
-  //#define YYSTYPE yystoken
-
   struct yystoken
   {
     void *v;
     unsigned int l;
     unsigned int c;
   };
-  typedef struct yystoken yystoken;
 
   int yylex(void);
   static int yyerror(char const *error);
@@ -49,13 +46,6 @@
   unsigned int queryparser_char;
 
   struct timespec queryparser_time;
-
-  #define queryparser_entry(S) \
-      do { \
-        queryparser_line = S.l; \
-        queryparser_char = S.c; \
-        clock_gettime(CLOCK_MONOTONIC, &queryparser_time); \
-      } while (0)
 
   #define queryparser_set_current_token(S) \
       do { \
@@ -97,7 +87,7 @@
   int integer;
   char *string;
   void *pointer;
-  yystoken token;
+  struct yystoken token;
   struct statement statement;
 }
 
@@ -135,12 +125,14 @@ nt_input:
 nt_statement:
     CREATE SCHEMA nt_if_not_exists nt_name /* nt_schema_create_definitions */
       {
+        queryparser_set_current_token($1);
         statement_init($$, query_create_schema);
         statement_push_arg($$, string, $4);
         statement_push_arg($$, boolean, !$3);
       }
   | CREATE TABLE nt_if_not_exists nt_name '(' nt_table_create_definitions ')' /* nt_table_options */
       {
+        queryparser_set_current_token($1);
         statement_init($$, query_create_table);
         statement_push_arg($$, string, $4);
         statement_push_arg($$, boolean, !$3);
@@ -148,26 +140,31 @@ nt_statement:
       }
   | DROP SCHEMA nt_if_exists nt_name
       {
+        queryparser_set_current_token($1);
         statement_init($$, query_drop_schema);
         statement_push_arg($$, string, $4);
         statement_push_arg($$, boolean, !$3);
       }
   | DROP TABLE nt_if_exists nt_name
       {
+        queryparser_set_current_token($1);
         statement_init($$, query_drop_table);
         statement_push_arg($$, string, $4);
         statement_push_arg($$, boolean, !$3);
       }
   | SHOW SCHEMATA
       {
+        queryparser_set_current_token($1);
         statement_init($$, query_show_schemata);
       }
   | SHOW TABLES
       {
+        queryparser_set_current_token($1);
         statement_init($$, query_show_tables);
       }
   | USE nt_name
       {
+        queryparser_set_current_token($1);
         statement_init($$, query_use);
         statement_push_arg($$, string, $2);
       }
@@ -231,7 +228,6 @@ nt_if_not_exists:
 
 %%
 
-#undef queryparser_entry
 #undef queryparser_set_current_token
 
 extern void yy_scan_string(const char *data);

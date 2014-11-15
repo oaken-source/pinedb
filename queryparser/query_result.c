@@ -25,7 +25,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 
 query_result*
 query_result_create (void)

@@ -24,13 +24,11 @@
 
 #include "datastore/datastore.h"
 
-#include <stdio.h>
-
 
 static schema *current_schema = NULL;
 
 
-static int
+static int may_fail
 query_create_schema_impl (query_result *r, char *name, int strict)
 {
   // make checks

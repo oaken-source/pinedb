@@ -44,6 +44,7 @@ typedef struct query_result query_result;
 
 
 /* create and instanciate a query_result instance
+ * the returned instance should be freed by invoking query_result_destroy
  *
  * errors:
  *   may fail and set errno for the same reasons as malloc
@@ -55,11 +56,11 @@ query_result *query_result_create(void) may_fail;
 
 /* destroy a query_result and free all associated memory
  *
- * errors:
- *   the behaviour is undefined if the passed pointer is invalid
- *
  * params:
  *   r - a pointer to a query_result
+ *
+ * errors:
+ *   the behaviour is undefined if the passed pointer is invalid
  */
 void query_result_destroy(query_result *r);
 

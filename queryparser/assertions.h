@@ -28,6 +28,8 @@
 
 #include <grapes/feedback.h>
 
+#include <time.h>
+
 /* interface to global parser state (currently processed file and line) */
 extern const char *queryparser_file;
 extern unsigned int queryparser_line;
