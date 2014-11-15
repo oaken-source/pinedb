@@ -23,17 +23,20 @@
 
 #include <string.h>
 
-int
-schema_init (schema *s, const char *name)
+schema*
+schema_create (const char *name)
 {
-  s->name = strdup(name);
-  assert_inner(s->name, "strdup");
+  schema *s = malloc(sizeof(*s));
+  assert_inner_ptr(s, "malloc");
 
-  return 0;
+  s->name = strdup(name);
+
+  return s;
 }
 
 void
-schema_fini (schema *s)
+schema_destroy (schema *s)
 {
   free(s->name);
+  free(s);
 }

@@ -20,87 +20,117 @@
 
 
 #include "query.h"
-#include "query_result.h"
 #include "assertions.h"
 
 #include "datastore/datastore.h"
 
 #include <stdio.h>
-#include <time.h>
 
 
-schema *current_schema = NULL;
+static schema *current_schema = NULL;
 
-#define query_return_result(RES) \
-  do { \
-    if (RES) \
-      { \
-        int res = query_result_print(RES); \
-        assert_inner(!res, "query_result_print"); \
-      } \
-    struct timespec end; \
-    clock_gettime(CLOCK_MONOTONIC, &end); \
-    double elapsed = (end.tv_sec + 1.0e-9 * end.tv_nsec) - \
-        (queryparser_time.tv_sec + 1.0e-9 * queryparser_time.tv_nsec); \
-    if (RES) \
-      { \
-        unsigned int rows = (((query_result*)RES)->nitems - 1) / ((query_result*)RES)->width; \
-        printf("ok: returned %u rows [%.8lfs]\n", rows, elapsed); \
-      } \
-    else \
-      printf("ok: [%.8lfs]\n", elapsed); \
-    if (RES) \
-      { \
-        query_result_fini(RES); \
-        free(RES); \
-      } \
-    return 0; \
-  } while (0)
 
-int
-query_create_schema (const char *name, int strict)
+static int
+query_create_schema_impl (query_result *r, char *name, int strict)
 {
+  // make checks
+  assert_inner(r, "query_result_create");
   schema *s = datastore_get_schema_by_name(name);
   parser_assert_err(QUERY_ERR_SCHEMA_CREATE_EEXISTS, !(strict && s), name);
+
+  // handle query
   if (s)
-    query_return_result(NULL);
+    return 0;
 
-  s = malloc(sizeof(*s));
-  assert_inner(s, "malloc");
-  int res = schema_init(s, name);
-  assert_inner(!res, "schema_init");
+  s = schema_create(name);
+  assert_inner(s, "schema_create");
 
-  res = datastore_add_schema(s);
+  int res = datastore_add_schema(s);
+  if (res)
+    schema_destroy(s);
   assert_inner(!res, "datastore_add_schema");
 
-  query_return_result(NULL);
+  return 0;
 }
 
-int
-query_drop_schema (const char *name, int strict)
+query_result*
+query_create_schema (query_arg *args)
 {
+  // extract arguments
+  char *name = args[0].string;
+  int strict = args[1].boolean;
+
+  // create result instance
+  query_result *r = query_result_create();
+
+  // call impl
+  int res = query_create_schema_impl(r, name, strict);
+
+  // free resources
+  free(name);
+
+  // return
+  if (res)
+    {
+      free(r);
+      return NULL;
+    }
+  return r;
+}
+
+static int may_fail
+query_drop_schema_impl (query_result *r, char *name, int strict)
+{
+  // make checks
+  assert_inner(r, "query_result_create");
   schema *s = datastore_get_schema_by_name(name);
   parser_assert_err(QUERY_ERR_SCHEMA_DROP_NOEXIST, !(strict && !s), name);
+
+  // handle query
   if (!s)
-    query_return_result(NULL);
+    return 0;
 
   datastore_remove_schema(s);
-
   if (current_schema == s)
     current_schema = NULL;
 
-  query_return_result(NULL);
+  return 0;
 }
 
-int
-query_show_schemata (void)
+query_result*
+query_drop_schema (query_arg *args)
 {
+  // extract arguments
+  char *name = args[0].string;
+  int strict = args[1].boolean;
+
+  // create result instance
+  query_result *r = query_result_create();
+
+  // call impl
+  int res = query_drop_schema_impl(r, name, strict);
+
+  // free resources
+  free(name);
+
+  // return
+  if (res)
+    {
+      free(r);
+      return NULL;
+    }
+  return r;
+}
+
+static int may_fail
+query_show_schemata_impl (query_result *r)
+{
+  // make checks
+  assert_inner(r, "query_result_create");
+
+  // propagate result set
   unsigned int nschemata;
   schema **schemata = datastore_get_schemata(&nschemata);
-
-  query_result *r = malloc(sizeof(*r));
-  assert_inner(r, "malloc");
-  query_result_init(r);
 
   query_result_set_width(r, 1);
   query_result_push_checked(r, "database");
@@ -109,28 +139,91 @@ query_show_schemata (void)
   for (i = 0; i < nschemata; ++i)
     query_result_push_checked(r, schemata[i]->name);
 
-  query_return_result(r);
+  return 0;
 }
 
-int
-query_use (const char *name)
+query_result*
+query_show_schemata (unused query_arg *args)
 {
+  // create result instance
+  query_result *r = query_result_create();
+
+  // call impl
+  int res = query_show_schemata_impl(r);
+
+  // return
+  if (res)
+    {
+      free(r);
+      return NULL;
+    }
+  return r;
+}
+
+static int may_fail
+query_use_impl (query_result *r, char *name)
+{
+  // make checks
+  assert_inner(r, "query_result_create");
   schema *s = datastore_get_schema_by_name(name);
   parser_assert_err(QUERY_ERR_SCHEMA_USE_NOEXIST, s, name);
 
+  // handle query
   current_schema = s;
 
-  query_return_result(NULL);
+  return 0;
 }
 
-int
-query_create_table (unused const char *name, unused int strict, unused void *columns, unused void *options)
+query_result*
+query_use (query_arg *args)
 {
-  query_return_result(NULL);
+  // extract arguments
+  char *name = args[0].string;
+
+  // create result instance
+  query_result *r = query_result_create();
+
+  // call impl
+  int res = query_use_impl(r, name);
+
+  // free resources
+  free(name);
+
+  // return
+  if (res)
+    {
+      free(r);
+      return NULL;
+    }
+  return r;
 }
 
-int
-query_drop_table (unused const char *name, unused int strict)
+query_result*
+query_create_table (unused query_arg *args)
 {
-  query_return_result(NULL);
+  // create result instance
+  query_result *r = query_result_create();
+  assert_inner_ptr(r, "query_result_create");
+
+  return r;
+}
+
+query_result*
+query_drop_table (unused query_arg *args)
+{
+  // create result instance
+  query_result *r = query_result_create();
+  assert_inner_ptr(r, "query_result_create");
+
+  return r;
+}
+
+query_result*
+query_show_tables (unused query_arg *args)
+{
+  // create result instance
+  query_result *r = query_result_create();
+  assert_inner_ptr(r, "query_result_create");
+
+  return r;
 }

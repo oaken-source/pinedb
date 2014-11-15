@@ -70,8 +70,7 @@ datastore_remove_schema (schema *s)
     datastore.schemata[i - 1] = datastore.schemata[i];
 
   --(datastore.nschemata);
-  schema_fini(s);
-  free(s);
+  schema_destroy(s);
 }
 
 static void
@@ -80,9 +79,7 @@ datastore_fini (void)
 {
   unsigned int i;
   for (i = 0; i < datastore.nschemata; ++i)
-    {
-      schema_fini(datastore.schemata[i]);
-      free(datastore.schemata[i]);
-    }
+    schema_destroy(datastore.schemata[i]);
+
   free(datastore.schemata);
 }

@@ -23,7 +23,17 @@
 
 #include <config.h>
 
+#include "query_result.h"
+
 #include <grapes/util.h>
+
+struct query_arg
+{
+  int boolean;
+  char *string;
+  void *pointer;
+};
+typedef struct query_arg query_arg;
 
 /* execute a create schema query
  *
@@ -40,7 +50,7 @@
  * returns:
  *   -1 on failure, 0 on success
  */
-int query_create_schema(const char *name, int strict) may_fail;
+query_result* query_create_schema(query_arg *args) may_fail;
 
 /* execute a drop schema query
  *
@@ -54,7 +64,7 @@ int query_create_schema(const char *name, int strict) may_fail;
  * returns:
  *   -1 on failure, 0 on success
  */
-int query_drop_schema(const char *name, int strict) may_fail;
+query_result* query_drop_schema(query_arg *args) may_fail;
 
 /* execute a show schemata statement
  *
@@ -65,7 +75,7 @@ int query_drop_schema(const char *name, int strict) may_fail;
  * returns:
  *   -1 on failure, 0 on success
  */
-int query_show_schemata(void) may_fail;
+query_result* query_show_schemata(query_arg *args) may_fail;
 
 /* execute a use statement
  *
@@ -78,8 +88,10 @@ int query_show_schemata(void) may_fail;
  * returns:
  *   -1 on failure, 0 on success
  */
-int query_use (const char *name) may_fail;
+query_result* query_use (query_arg *args) may_fail;
 
-int query_create_table (const char *name, int strict, void *columns, void *options) may_fail;
+query_result* query_create_table (query_arg *args) may_fail;
 
-int query_drop_table (const char *name, int strict) may_fail;
+query_result* query_drop_table (query_arg *args) may_fail;
+
+query_result* query_show_tables (query_arg *args) may_fail;

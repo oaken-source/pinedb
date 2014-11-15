@@ -32,6 +32,6 @@ struct schema
 typedef struct schema schema;
 
 
-int schema_init(schema *s, const char *name) may_fail;
+schema *schema_create(const char *name) may_fail;
 
-void schema_fini(schema *s);
+void schema_destroy(schema *s);

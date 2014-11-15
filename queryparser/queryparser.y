@@ -30,7 +30,7 @@
   #include <time.h>
   #include <stdint.h>
 
-  #define YYSTYPE yystoken
+  //#define YYSTYPE yystoken
 
   struct yystoken
   {
@@ -57,10 +57,59 @@
         clock_gettime(CLOCK_MONOTONIC, &queryparser_time); \
       } while (0)
 
+  #define queryparser_set_current_token(S) \
+      do { \
+        queryparser_line = (S).l; \
+        queryparser_char = (S).c; \
+      } while (0)
+
+  struct statement
+  {
+    query_result*(*func)(query_arg*);
+    const char *func_name;
+    query_arg *args;
+    size_t nargs;
+  };
+
+  void
+  statement_init_impl(struct statement *s, query_result*(*func)(query_arg*), const char *func_name)
+  {
+    s->func = func;
+    s->func_name = func_name;
+    s->args = NULL;
+    s->nargs = 0;
+  }
+
+  #define statement_init(S, TYPE) statement_init_impl(&(S), &TYPE, # TYPE)
+
+  #define statement_push_arg(S, TYPE, A) \
+      do { \
+        ++((S).nargs); \
+        (S).args = realloc((S).args, sizeof(*((S).args)) * (S).nargs); \
+        assert_inner((S).args, "realloc"); \
+        (S).args[(S).nargs - 1].TYPE = (A); \
+      } while (0)
+
 %}
 
-%token CREATE DROP SHOW USE SCHEMA SCHEMATA TABLE TABLES INT VARCHAR IF_NOT_EXISTS IF_EXISTS identifier
-%token IDENTIFIER BT_IDENTIFIER NUMBER
+%union {
+  int boolean;
+  int integer;
+  char *string;
+  void *pointer;
+  yystoken token;
+  struct statement statement;
+}
+
+%token <token> CREATE DROP SHOW USE SCHEMA SCHEMATA TABLE TABLES INT VARCHAR IF_NOT_EXISTS IF_EXISTS UNDEFINED
+%token <token> IDENTIFIER BT_IDENTIFIER NUMBER
+
+%type <boolean> nt_if_exists nt_if_not_exists
+%type <integer> nt_length nt_optional_length
+%type <string> nt_name
+%type <pointer> nt_table_create_definitions
+%type <statement> nt_statement
+
 
 %destructor { free($$.v); } IDENTIFIER BT_IDENTIFIER NUMBER
 
@@ -68,91 +117,70 @@
 
 %%
 
-/*  */
-nt_statements:
+/* dispatch statements */
+nt_input:
     /* empty */
-  | nt_statements nt_statement
+  | nt_input nt_statement ';'
+      {
+        clock_gettime(CLOCK_MONOTONIC, &queryparser_time);
+        query_result *r = $2.func($2.args);
+        free($2.args);
+        assert_inner(r, "%s", $2.func_name);
+        int res = query_result_print(r);
+        query_result_destroy(r);
+        assert_inner(!res, "query_result_print");
+      }
 ;
 
 nt_statement:
-    CREATE nt_create_statement
-  | DROP nt_drop_statement
-  | SHOW nt_show_statement
-  | USE nt_use_statement
-;
-
-nt_create_statement:
-    SCHEMA nt_if_not_exists nt_db_name nt_schema_create_definitions ';'
+    CREATE SCHEMA nt_if_not_exists nt_name /* nt_schema_create_definitions */
       {
-        queryparser_entry($3);
-        int res = query_create_schema($3.v, !$2.v);
-        free($3.v);
-        assert_inner(!res, "query_create_schema");
+        statement_init($$, query_create_schema);
+        statement_push_arg($$, string, $4);
+        statement_push_arg($$, boolean, !$3);
       }
-  | TABLE nt_if_not_exists nt_tbl_name '(' nt_table_create_definitions ')' nt_table_options ';'
+  | CREATE TABLE nt_if_not_exists nt_name '(' nt_table_create_definitions ')' /* nt_table_options */
       {
-        queryparser_entry($3);
-        int res = query_create_table($3.v, !$2.v, $4.v, $5.v);
-        free($3.v);
-        assert_inner(!res, "query_create_table");
+        statement_init($$, query_create_table);
+        statement_push_arg($$, string, $4);
+        statement_push_arg($$, boolean, !$3);
+        statement_push_arg($$, pointer, $6);
       }
-;
-
-nt_if_not_exists:
-    /* empty */
+  | DROP SCHEMA nt_if_exists nt_name
       {
-        $$.v = (void*)0;
+        statement_init($$, query_drop_schema);
+        statement_push_arg($$, string, $4);
+        statement_push_arg($$, boolean, !$3);
       }
-  | IF_NOT_EXISTS
+  | DROP TABLE nt_if_exists nt_name
       {
-        $$.v = (void*)1;
+        statement_init($$, query_drop_table);
+        statement_push_arg($$, string, $4);
+        statement_push_arg($$, boolean, !$3);
       }
-;
-
-nt_db_name:
-    IDENTIFIER
+  | SHOW SCHEMATA
       {
-        $$ = $1;
+        statement_init($$, query_show_schemata);
       }
-  | BT_IDENTIFIER
+  | SHOW TABLES
       {
-        $$ = $1;
+        statement_init($$, query_show_tables);
+      }
+  | USE nt_name
+      {
+        statement_init($$, query_use);
+        statement_push_arg($$, string, $2);
       }
 ;
 
-nt_schema_create_definitions:
-    /* FIXME: none are supported yet */
-;
-
-nt_tbl_name:
-    IDENTIFIER
-      {
-        $$ = $1;
-      }
-  | BT_IDENTIFIER
-      {
-        $$ = $1;
-      }
-;
-
+/* create table statement specific rules */
 nt_table_create_definitions:
-    nt_table_create_definition
-  | nt_table_create_definitions ',' nt_table_create_definition
+    nt_table_create_definition { $$ = NULL; }
+  | nt_table_create_definitions ',' nt_table_create_definition { $$ = NULL; }
 ;
 
 nt_table_create_definition:
-    nt_col_name nt_column_definition
-;
-
-nt_col_name:
-    IDENTIFIER
-      {
-        $$ = $1;
-      }
-  | BT_IDENTIFIER
-      {
-        $$ = $1;
-      }
+    nt_name nt_column_definition
 ;
 
 nt_column_definition:
@@ -161,124 +189,60 @@ nt_column_definition:
 
 nt_data_type:
     INT nt_optional_length
-      {
-        unused long int length = 11;
-        if ($2.v)
-          {
-            int errnum = errno;
-            errno = 0;
-            length = strtol($2.v, NULL, 10);
-            queryparser_entry($2);
-            parser_assert_err(QUERY_ERR_CONVERSION, errno != EINVAL && errno != ERANGE, $2.v);
-            errno = errnum;
-          }
-      }
   | VARCHAR nt_length
-      {
-        unused long int length;
-        int errnum = errno;
-        errno = 0;
-        length = strtol($2.v, NULL, 10);
-        queryparser_entry($2);
-        parser_assert_err(QUERY_ERR_CONVERSION, errno != EINVAL && errno != ERANGE, $2.v);
-        errno = errnum;
-      }
+;
+
+/* simple value rules */
+nt_name:
+    IDENTIFIER                                  { $$ = $1.v; }
+  | BT_IDENTIFIER                               { $$ = $1.v; }
 ;
 
 nt_optional_length:
-    /* empty */
-      {
-        $$.v = NULL;
-      }
-  | nt_length
-      {
-        $$ = $1;
-      }
+    /* empty */                                 { $$ = 0; }
+  | nt_length                                   { $$ = $1; }
 ;
 
 nt_length:
     '(' NUMBER ')'
       {
-        $$ = $2;
-      }
-;
-nt_table_options:
-    /* empty */
-  | nt_table_options_list
-;
-
-nt_table_options_list:
-    nt_table_option
-  | nt_table_options ',' nt_table_option
-;
-
-nt_table_option:
-    /* FIXME: none are supported yet */
-;
-
-nt_drop_statement:
-    SCHEMA nt_if_exists nt_db_name ';'
-      {
-        queryparser_entry($3);
-        int res = query_drop_schema($3.v, !$2.v);
-        free($3.v);
-        assert_inner(!res, "query_drop_schema");
-      }
-  | TABLE nt_if_exists nt_tbl_name ';'
-      {
-        queryparser_entry($3);
-        int res = query_drop_table($3.v, !$2.v);
-        free($3.v);
-        assert_inner(!res, "query_drop_table");
+        queryparser_set_current_token($2);
+        int errnum = errno;
+        errno = 0;
+        $$ = strtol($2.v, NULL, 10);
+        int query_err_conversion = (errno == ERANGE || errno == EINVAL);
+        parser_assert_err_weak(QUERY_ERR_CONVERSION, !query_err_conversion, $2.v);
+        errno = errnum;
+        free($2.v);
+        assert_inner(!query_err_conversion, "strtol");
       }
 ;
 
+/* simple boolean rules */
 nt_if_exists:
-    /* empty */
-      {
-        $$.v = (void*)0;
-      }
-  | IF_EXISTS
-      {
-        $$.v = (void*)1;
-      }
+    /* empty */                                 { $$ = 0; }
+  | IF_EXISTS                                   { $$ = 1; }
 ;
 
-nt_show_statement:
-    SCHEMATA ';'
-      {
-        queryparser_entry($1);
-        int res = query_show_schemata();
-        assert_inner(!res, "query_show_schemata");
-      }
-;
-
-nt_use_statement:
-    nt_db_name ';'
-      {
-        queryparser_entry($1);
-        int res = query_use($1.v);
-        free($1.v);
-        assert_inner(!res, "query_use");
-      }
+nt_if_not_exists:
+    /* empty */                                 { $$ = 0; }
+  | IF_NOT_EXISTS                               { $$ = 1; }
 ;
 
 %%
 
 #undef queryparser_entry
+#undef queryparser_set_current_token
 
 extern void yy_scan_string(const char *data);
 extern void yylex_destroy(void);
-extern unsigned int yylex_from_stdin;
+extern void querylexer_restart(void);
 
 int
 queryparser_parse_from_file (const char *filename, const char *data)
 {
   queryparser_file = filename;
-  queryparser_line = 0;
-  queryparser_char = 0;
-
-  yylex_from_stdin = 0;
+  querylexer_restart();
 
   yy_scan_string(data);
   int res = yyparse();
@@ -288,19 +252,12 @@ queryparser_parse_from_file (const char *filename, const char *data)
   return 0;
 }
 
-extern void querylexer_restart(void);
-
 int
 queryparser_parse_from_stdin (void)
 {
   queryparser_file = "<stdin>";
-  queryparser_line = 0;
-  queryparser_char = 0;
-
-  yylex_from_stdin = 1;
 
   int err = 0;
-
   int res;
   do
     {

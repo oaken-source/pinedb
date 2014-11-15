@@ -73,6 +73,17 @@ extern struct timespec queryparser_time;
  *   COND - the condition to check
  *   ... - a variable length list of parameters for the format string
  */
+#define parser_assert_err_weak(FLAG, COND, ...) \
+  do \
+    { \
+      if (!(COND)) \
+        { \
+          feedback_error(EXIT_SUCCESS, "%s:%i:%i: error: " FLAG ## _STR, \
+              queryparser_file, queryparser_line, queryparser_char, ## __VA_ARGS__); \
+        } \
+    } \
+  while(0)
+
 #define parser_assert_err(FLAG, COND, ...) \
   do \
     { \
@@ -83,5 +94,4 @@ extern struct timespec queryparser_time;
           return -1; \
         } \
     } \
-  while (0)
-
+  while(0)

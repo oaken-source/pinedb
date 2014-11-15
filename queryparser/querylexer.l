@@ -45,7 +45,6 @@
   #include <grapes/util.h>
 
   unsigned int yycharno = 0;
-  unsigned int yylex_from_stdin = 0;
 
   #define common_setup do { yylval.l = yylineno; yylval.c = yycharno; yycharno += yyleng; } while (0)
 
@@ -69,7 +68,7 @@ varchar             { common_setup; return VARCHAR; }
 if\ not\ exists     { common_setup; return IF_NOT_EXISTS; }
 if\ exists          { common_setup; return IF_EXISTS; }
 
-`[^`]*`                { common_setup;
+`[^`]*`             { common_setup;
                       yytext[yyleng - 1] = 0;
                       yylval.v = strdup(yytext + 1);
                       return BT_IDENTIFIER; }
@@ -80,7 +79,7 @@ if\ exists          { common_setup; return IF_EXISTS; }
                       yylval.v = strdup(yytext);
                       return IDENTIFIER; }
 
-\n                  { yycharno = 0; }
+\n                  { yycharno = 1; }
 [ \r\t]*            { yycharno += yyleng; }
 
 .                   { common_setup; return yytext[0]; }
@@ -92,7 +91,8 @@ if\ exists          { common_setup; return IF_EXISTS; }
 void
 querylexer_restart (void)
 {
-  yylineno = 0;
+  yylineno = 1;
+  yycharno = 1;
   YY_FLUSH_BUFFER;
 }
 
@@ -113,6 +113,7 @@ querylexer_input (char *buf, size_t size)
   strcpy(buf, line);
   free(line);
   add_history(buf);
+  strcat(buf, "\n");
 
   return strlen(buf);
 }
