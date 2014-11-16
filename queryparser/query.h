@@ -24,16 +24,9 @@
 #include <config.h>
 
 #include "query_result.h"
+#include "query_args.h"
 
 #include <grapes/util.h>
-
-union query_arg
-{
-  int boolean;
-  char *string;
-  void *pointer;
-};
-typedef union query_arg query_arg;
 
 /* execute a create schema query
  *
@@ -92,11 +85,24 @@ query_result* query_show_schemata(query_arg *args) may_fail;
  *   will fail if a schema of the given name does not exist
  *
  * returns:
- *   q pointer to a query_result on success, NULL on failure
+ *   a pointer to a query_result on success, NULL on failure
  */
 query_result* query_use (query_arg *args) may_fail;
 
-/* FIXME: in the making */
+/* execute a create table statement
+ *
+ * params:
+ *   args[0] <string>  - the name of the table
+ *   args[1] <boolean> - flag indicating wether the query fails on eexist
+ *   args[2] <pointer> - an array of column definitions
+ *   args[3] <integer> - the length of the array
+ *
+ * errors:
+ *   TODO
+ *
+ * returns:
+ *   a pointer to a query_result on success, NULL on failuer
+ */
 query_result* query_create_table (query_arg *args) may_fail;
 
 /* FIXME: in the making */

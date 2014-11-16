@@ -19,37 +19,45 @@
  ******************************************************************************/
 
 
-#include "schema.h"
+#pragma once
 
-#include <string.h>
+#include <config.h>
 
-schema*
-schema_create (const char *name)
+#include "query.h"
+
+#include "datastore/datastore.h"
+
+struct yystoken
 {
-  schema *s = malloc(sizeof(*s));
-  assert_inner_ptr(s, "malloc");
+  char *v;
+  unsigned int l;
+  unsigned int c;
+};
+typedef struct yystoken yystoken;
 
-  s->name = strdup(name);
-  if (!s->name)
-    {
-      free(s);
-      assert_inner_ptr(0, "strdup");
-    }
-
-  s->tables = NULL;
-  s->ntables = 0;
-
-  return s;
-}
-
-void
-schema_destroy (schema *s)
+struct tok_datatype
 {
-  unsigned int i;
-  for (i = 0; i < s->ntables; ++i)
-    table_destroy(s->tables[i]);
-  free(s->tables);
+  datatype type;
+  int width;
+};
 
-  free(s->name);
-  free(s);
-}
+struct tok_column
+{
+  char *name;
+  struct tok_datatype type;
+};
+
+struct tok_statement
+{
+  query_result*(*func)(query_arg*);
+  const char *func_name;
+  query_arg args[4];
+};
+
+#define statement_init(S, TYPE) \
+    do { \
+      (S).func = &(TYPE); \
+      (S).func_name = #TYPE; \
+    } while (0)
+
+

@@ -19,37 +19,29 @@
  ******************************************************************************/
 
 
-#include "schema.h"
+#pragma once
 
-#include <string.h>
+#include <config.h>
 
-schema*
-schema_create (const char *name)
+#include <grapes/util.h>
+
+enum datatype
 {
-  schema *s = malloc(sizeof(*s));
-  assert_inner_ptr(s, "malloc");
+  DATATYPE_INT,
+  DATATYPE_VARCHAR
+};
+typedef enum datatype datatype;
 
-  s->name = strdup(name);
-  if (!s->name)
-    {
-      free(s);
-      assert_inner_ptr(0, "strdup");
-    }
-
-  s->tables = NULL;
-  s->ntables = 0;
-
-  return s;
-}
-
-void
-schema_destroy (schema *s)
+struct column
 {
-  unsigned int i;
-  for (i = 0; i < s->ntables; ++i)
-    table_destroy(s->tables[i]);
-  free(s->tables);
+  char *name;
 
-  free(s->name);
-  free(s);
-}
+  datatype type;
+  int width;
+};
+typedef struct column column;
+
+
+column *column_create (const char *name, datatype type, int width) may_fail;
+
+void column_destroy (column *c);

@@ -19,37 +19,24 @@
  ******************************************************************************/
 
 
-#include "schema.h"
+#pragma once
 
-#include <string.h>
+#include <config.h>
 
-schema*
-schema_create (const char *name)
+#include "column.h"
+
+#include <grapes/util.h>
+
+struct table
 {
-  schema *s = malloc(sizeof(*s));
-  assert_inner_ptr(s, "malloc");
+  char *name;
 
-  s->name = strdup(name);
-  if (!s->name)
-    {
-      free(s);
-      assert_inner_ptr(0, "strdup");
-    }
+  column **columns;
+  unsigned int ncolumns;
+};
+typedef struct table table;
 
-  s->tables = NULL;
-  s->ntables = 0;
 
-  return s;
-}
+table *table_create (const char *name) may_fail;
 
-void
-schema_destroy (schema *s)
-{
-  unsigned int i;
-  for (i = 0; i < s->ntables; ++i)
-    table_destroy(s->tables[i]);
-  free(s->tables);
-
-  free(s->name);
-  free(s);
-}
+void table_destroy (table *t);

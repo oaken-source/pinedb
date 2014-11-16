@@ -22,13 +22,7 @@
 
 %top{
 
-  struct yystoken
-  {
-    void *v;
-    unsigned int l;
-    unsigned int c;
-  };
-  typedef struct yystoken yystoken;
+  #include "parser_tokens.h"
 
   #define YYSTYPE yystoken
 

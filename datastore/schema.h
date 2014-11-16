@@ -23,11 +23,16 @@
 
 #include <config.h>
 
+#include "table.h"
+
 #include <grapes/util.h>
 
 struct schema
 {
   char *name;
+
+  table **tables;
+  unsigned int ntables;
 };
 typedef struct schema schema;
 

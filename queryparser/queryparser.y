@@ -24,19 +24,15 @@
 
   #include "query.h"
   #include "assertions.h"
+  #include "parser_tokens.h"
+
   #include "datastore/datastore.h"
 
   #include <stdio.h>
   #include <time.h>
   #include <stdint.h>
 
-  struct yystoken
-  {
-    void *v;
-    unsigned int l;
-    unsigned int c;
-  };
-
+  // required forward declarations
   int yylex(void);
   static int yyerror(char const *error);
 
@@ -53,24 +49,7 @@
         queryparser_char = (S).c; \
       } while (0)
 
-  struct statement
-  {
-    query_result*(*func)(query_arg*);
-    const char *func_name;
-    query_arg *args;
-    size_t nargs;
-  };
-
-  void
-  statement_init_impl(struct statement *s, query_result*(*func)(query_arg*), const char *func_name)
-  {
-    s->func = func;
-    s->func_name = func_name;
-    s->args = NULL;
-    s->nargs = 0;
-  }
-
-  #define statement_init(S, TYPE) statement_init_impl(&(S), &TYPE, # TYPE)
+  static int string_to_int(int *res, const char *str) may_fail;
 
   #define statement_push_arg(S, TYPE, A) \
       do { \
@@ -80,15 +59,31 @@
         (S).args[(S).nargs - 1].TYPE = (A); \
       } while (0)
 
+  #define statement_set_arg(S, N, TYPE, A) \
+      do { \
+        (S).args[(N)].TYPE = (A); \
+      } while (0)
+
+  struct vector
+  {
+    void *items;
+    int nitems;
+  };
+
 %}
 
 %union {
+  struct yystoken token;
+
   int boolean;
   int integer;
   char *string;
-  void *pointer;
-  struct yystoken token;
-  struct statement statement;
+
+  struct tok_statement statement;
+  struct tok_datatype datatype;
+
+  struct tok_column column;
+  struct vector vector;
 }
 
 %token <token> CREATE DROP SHOW USE SCHEMA SCHEMATA TABLE TABLES INT VARCHAR IF_NOT_EXISTS IF_EXISTS UNDEFINED
@@ -97,11 +92,16 @@
 %type <boolean> nt_if_exists nt_if_not_exists
 %type <integer> nt_length nt_optional_length
 %type <string> nt_name
-%type <pointer> nt_table_create_definitions
+
 %type <statement> nt_statement
+%type <datatype> nt_data_type nt_column_definition
+
+%type <vector> nt_table_create_definitions
+%type <column> nt_table_create_definition
 
 
 %destructor { free($$.v); } IDENTIFIER BT_IDENTIFIER NUMBER
+%destructor { free($$); } nt_name
 
 %error-verbose
 
@@ -114,7 +114,6 @@ nt_input:
       {
         clock_gettime(CLOCK_MONOTONIC, &queryparser_time);
         query_result *r = $2.func($2.args);
-        free($2.args);
         assert_inner(r, "%s", $2.func_name);
         int res = query_result_print(r);
         query_result_destroy(r);
@@ -127,30 +126,31 @@ nt_statement:
       {
         queryparser_set_current_token($1);
         statement_init($$, query_create_schema);
-        statement_push_arg($$, string, $4);
-        statement_push_arg($$, boolean, !$3);
+        statement_set_arg($$, 0, string, $4);
+        statement_set_arg($$, 1, boolean, !$3);
       }
   | CREATE TABLE nt_if_not_exists nt_name '(' nt_table_create_definitions ')' /* nt_table_options */
       {
         queryparser_set_current_token($1);
         statement_init($$, query_create_table);
-        statement_push_arg($$, string, $4);
-        statement_push_arg($$, boolean, !$3);
-        statement_push_arg($$, pointer, $6);
+        statement_set_arg($$, 0, string, $4);
+        statement_set_arg($$, 1, boolean, !$3);
+        statement_set_arg($$, 2, pointer, $6.items);
+        statement_set_arg($$, 3, integer, $6.nitems);
       }
   | DROP SCHEMA nt_if_exists nt_name
       {
         queryparser_set_current_token($1);
         statement_init($$, query_drop_schema);
-        statement_push_arg($$, string, $4);
-        statement_push_arg($$, boolean, !$3);
+        statement_set_arg($$, 0, string, $4);
+        statement_set_arg($$, 1, boolean, !$3);
       }
   | DROP TABLE nt_if_exists nt_name
       {
         queryparser_set_current_token($1);
         statement_init($$, query_drop_table);
-        statement_push_arg($$, string, $4);
-        statement_push_arg($$, boolean, !$3);
+        statement_set_arg($$, 0, string, $4);
+        statement_set_arg($$, 1, boolean, !$3);
       }
   | SHOW SCHEMATA
       {
@@ -166,27 +166,40 @@ nt_statement:
       {
         queryparser_set_current_token($1);
         statement_init($$, query_use);
-        statement_push_arg($$, string, $2);
+        statement_set_arg($$, 0, string, $2);
       }
 ;
 
 /* create table statement specific rules */
 nt_table_create_definitions:
-    nt_table_create_definition { $$ = NULL; }
-  | nt_table_create_definitions ',' nt_table_create_definition { $$ = NULL; }
+    nt_table_create_definition
+      {
+        $$.items = malloc(sizeof($1));
+        assert_inner($$.items, "malloc");
+        ((struct tok_column*)$$.items)[0] = $1;
+        $$.nitems = 1;
+      }
+  | nt_table_create_definitions ',' nt_table_create_definition
+      {
+        $$ = $1;
+        ++($$.nitems);
+        $$.items = realloc($$.items, sizeof($3) * $$.nitems);
+        assert_inner($$.items, "realloc");
+        ((struct tok_column*)$$.items)[$$.nitems - 1] = $3;
+      }
 ;
 
 nt_table_create_definition:
-    nt_name nt_column_definition
+    nt_name nt_column_definition                { $$.name = $1; $$.type = $2; }
 ;
 
 nt_column_definition:
-    nt_data_type
+    nt_data_type                                { $$ = $1; }
 ;
 
 nt_data_type:
-    INT nt_optional_length
-  | VARCHAR nt_length
+    INT nt_optional_length                      { $$.width = $2; $$.type = DATATYPE_INT; }
+  | VARCHAR nt_length                           { $$.width = $2; $$.type = DATATYPE_VARCHAR; }
 ;
 
 /* simple value rules */
@@ -204,14 +217,9 @@ nt_length:
     '(' NUMBER ')'
       {
         queryparser_set_current_token($2);
-        int errnum = errno;
-        errno = 0;
-        $$ = strtol($2.v, NULL, 10);
-        int query_err_conversion = (errno == ERANGE || errno == EINVAL);
-        parser_assert_err_weak(QUERY_ERR_CONVERSION, !query_err_conversion, $2.v);
-        errno = errnum;
+        int res = string_to_int(&$$, $2.v);
         free($2.v);
-        assert_inner(!query_err_conversion, "strtol");
+        assert_inner(!res, "string_to_int");
       }
 ;
 
@@ -229,6 +237,18 @@ nt_if_not_exists:
 %%
 
 #undef queryparser_set_current_token
+
+static int
+string_to_int (int *res, const char *str)
+{
+  int errnum = errno;
+  errno = 0;
+  *res = strtol(str, NULL, 10);
+  parser_assert_err(QUERY_ERR_CONVERSION, errno != ERANGE && errno != EINVAL, str);
+  errno = errnum;
+
+  return 0;
+}
 
 extern void yy_scan_string(const char *data);
 extern void yylex_destroy(void);

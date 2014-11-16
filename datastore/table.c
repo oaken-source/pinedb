@@ -19,37 +19,35 @@
  ******************************************************************************/
 
 
-#include "schema.h"
+#include "table.h"
 
+#include <stdlib.h>
 #include <string.h>
 
-schema*
-schema_create (const char *name)
+table*
+table_create (const char *name)
 {
-  schema *s = malloc(sizeof(*s));
-  assert_inner_ptr(s, "malloc");
+  table *t = malloc(sizeof(*t));
+  assert_inner_ptr(t, "malloc");
 
-  s->name = strdup(name);
-  if (!s->name)
+  t->name = strdup(name);
+  if (!t->name)
     {
-      free(s);
+      free(t);
       assert_inner_ptr(0, "strdup");
     }
 
-  s->tables = NULL;
-  s->ntables = 0;
-
-  return s;
+  return t;
 }
 
 void
-schema_destroy (schema *s)
+table_destroy (table *t)
 {
   unsigned int i;
-  for (i = 0; i < s->ntables; ++i)
-    table_destroy(s->tables[i]);
-  free(s->tables);
+  for (i = 0; i < t->ncolumns; ++i)
+    column_destroy(t->columns[i]);
+  free(t->columns);
 
-  free(s->name);
-  free(s);
+  free(t->name);
+  free(t);
 }

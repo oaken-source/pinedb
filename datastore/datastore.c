@@ -80,6 +80,5 @@ datastore_fini (void)
   unsigned int i;
   for (i = 0; i < datastore.nschemata; ++i)
     schema_destroy(datastore.schemata[i]);
-
   free(datastore.schemata);
 }

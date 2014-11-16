@@ -199,6 +199,12 @@ query_use (query_arg *args)
 query_result*
 query_create_table (unused query_arg *args)
 {
+  // extract arguments
+  //char *name = args[0].string;
+  //int strict = args[1].boolean;
+  //column_def *cols = args[2].pointer;
+  //int ncols = args[3].integer;
+
   // create result instance
   query_result *r = query_result_create();
   assert_inner_ptr(r, "query_result_create");

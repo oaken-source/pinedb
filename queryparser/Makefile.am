@@ -6,7 +6,7 @@ noinst_LTLIBRARIES = libqueryparser.la
 BUILT_SOURCES = queryparser.h
 AM_YFLAGS = -d -Wall -Werror
 
-libqueryparser_la_SOURCES = queryparser.y querylexer.l parser.h assertions.h query.c query.h query_result.c query_result.h
+libqueryparser_la_SOURCES = queryparser.y querylexer.l parser.h assertions.h query.c query.h query_result.c query_result.h query_args.c query_args.h parser_tokens.h
 AM_CFLAGS += -I${top_srcdir}
 
 libqueryparser_la_LIBADD = -lreadline

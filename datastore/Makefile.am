@@ -3,7 +3,7 @@
 
 noinst_LTLIBRARIES = libdatastore.la
 
-libdatastore_la_SOURCES = datastore.c datastore.h schema.c schema.h
+libdatastore_la_SOURCES = datastore.c datastore.h schema.c schema.h table.c table.h column.c column.h
 AM_CFLAGS += -I${top_srcdir}
 
 if PROFILING
