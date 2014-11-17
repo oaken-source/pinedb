@@ -197,6 +197,7 @@ query_use (query_arg *args)
   return r;
 }
 
+// FIXME: remove debug include
 #include <stdio.h>
 
 query_result*

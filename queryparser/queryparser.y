@@ -161,15 +161,23 @@ nt_table_create_definitions:
       {
         vector_init(&$$);
         int res = vector_push(&$$, $1);
-        assert_weak(!res, "vector_push");
-        parser_assert_err(QUERY_ERR_FAILED, !res);
+        if (res)
+          {
+            assert_weak(!res, "vector_push");
+            vector_clear(&$$);
+            parser_assert_err(QUERY_ERR_FAILED, !res);
+          }
       }
   | nt_table_create_definitions ',' nt_table_create_definition
       {
         $$ = $1;
         int res = vector_push(&$$, $3);
-        assert_weak(!res, "vector_push");
-        parser_assert_err(QUERY_ERR_FAILED, !res);
+        if (res)
+          {
+            assert_weak(0, "vector_push");
+            vector_clear(&$$);
+            parser_assert_err(QUERY_ERR_FAILED, 0);
+          }
       }
 ;
 
@@ -182,8 +190,18 @@ nt_column_definition:
 ;
 
 nt_data_type:
-    INT nt_optional_length                      { $$.width = $2; $$.type = DATATYPE_INT; }
-  | VARCHAR nt_length                           { $$.width = $2; $$.type = DATATYPE_VARCHAR; }
+    INT nt_optional_length
+      {
+        $$.width = $2;
+        if (!$$.width)
+          $$.width = 11;
+        $$.type = DATATYPE_INT;
+      }
+  | VARCHAR nt_length
+      {
+        $$.width = $2;
+        $$.type = DATATYPE_VARCHAR;
+      }
 ;
 
 /* simple value rules */

@@ -37,7 +37,16 @@
     }; \
     typedef struct vector_ ## NAME NAME;
 
-#define vector_init(V) _vector_init_impl((struct _vector_generic*)V)
+#define vector_map(V, FUNC) \
+    do { \
+      size_t i; \
+      for (i = 0; i < (V).nitems; ++i) \
+        FUNC((V).items[i]); \
+    } while (0)
+
+#define vector_init(V) _vector_init_impl((struct _vector_generic*)(V))
+
+#define vector_clear(V) _vector_clear_impl((struct _vector_generic*)(V))
 
 #define vector_push(V, ITEM) _vector_push_impl((struct _vector_generic*)V, &(ITEM), sizeof(ITEM))
 
@@ -48,6 +57,8 @@ struct _vector_generic
 };
 
 void _vector_init_impl(struct _vector_generic *v);
+
+void _vector_clear_impl (struct _vector_generic *v);
 
 int _vector_push_impl(struct _vector_generic *v, void *item, size_t size) may_fail;
 

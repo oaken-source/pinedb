@@ -30,6 +30,14 @@ _vector_init_impl (struct _vector_generic *v)
   v->nitems = 0;
 }
 
+void
+_vector_clear_impl (struct _vector_generic *v)
+{
+  free(v->items);
+  v->items = NULL;
+  v->nitems = 0;
+}
+
 int
 _vector_push_impl(struct _vector_generic *v, void *item, size_t size)
 {
