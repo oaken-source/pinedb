@@ -68,6 +68,7 @@
   struct tok_statement statement;
   struct tok_column column;
   struct tok_datatype datatype;
+  struct tok_tbl_name tbl_name;
 
   tok_column_vector columns;
 }
@@ -82,12 +83,14 @@
 %type <statement> nt_statement
 %type <column> nt_table_create_definition
 %type <datatype> nt_data_type nt_column_definition
+%type <tbl_name> nt_tbl_name
 
 %type <columns> nt_table_create_definitions
 
 
 %destructor { free($$.v); } IDENTIFIER BT_IDENTIFIER NUMBER
 %destructor { free($$); } nt_name
+%destructor { vector_clear(&$$); } nt_table_create_definitions
 
 %error-verbose
 
@@ -115,13 +118,14 @@ nt_statement:
         statement_set_arg($$, 0, string, $4);
         statement_set_arg($$, 1, boolean, !$3);
       }
-  | CREATE TABLE nt_if_not_exists nt_name '(' nt_table_create_definitions ')' /* nt_table_options */
+  | CREATE TABLE nt_if_not_exists nt_tbl_name '(' nt_table_create_definitions ')' /* nt_table_options */
       {
         queryparser_set_current_token($1);
         statement_init($$, query_create_table);
-        statement_set_arg($$, 0, string, $4);
-        statement_set_arg($$, 1, boolean, !$3);
-        statement_set_arg($$, 2, pointer, &$6);
+        statement_set_arg($$, 0, string, $4.table);
+        statement_set_arg($$, 1, string, $4.schema);
+        statement_set_arg($$, 2, boolean, !$3);
+        statement_set_arg($$, 3, pointer, &$6);
       }
   | DROP SCHEMA nt_if_exists nt_name
       {
@@ -130,12 +134,13 @@ nt_statement:
         statement_set_arg($$, 0, string, $4);
         statement_set_arg($$, 1, boolean, !$3);
       }
-  | DROP TABLE nt_if_exists nt_name
+  | DROP TABLE nt_if_exists nt_tbl_name
       {
         queryparser_set_current_token($1);
         statement_init($$, query_drop_table);
-        statement_set_arg($$, 0, string, $4);
-        statement_set_arg($$, 1, boolean, !$3);
+        statement_set_arg($$, 0, string, $4.table);
+        statement_set_arg($$, 1, string, $4.schema);
+        statement_set_arg($$, 2, boolean, !$3);
       }
   | SHOW SCHEMATA
       {
@@ -203,6 +208,10 @@ nt_data_type:
         $$.type = DATATYPE_VARCHAR;
       }
 ;
+
+nt_tbl_name:
+    nt_name                                     { $$.table = $1; $$.schema = NULL; }
+  | nt_name '.' nt_name                         { $$.table = $3; $$.schema = $1; }
 
 /* simple value rules */
 nt_name:
@@ -275,13 +284,11 @@ queryparser_parse_from_stdin (void)
 {
   queryparser_file = "<stdin>";
 
-  int err = 0;
   int res;
   do
     {
       querylexer_restart();
       res = yyparse();
-      err |= (res != 0);
       assert_weak(!res, "%s: yyparse", queryparser_file);
     }
   while (res != 0);
@@ -290,7 +297,7 @@ queryparser_parse_from_stdin (void)
 
   printf("\n");
 
-  return -err;
+  return 0;
 }
 
 extern unsigned int yylineno;

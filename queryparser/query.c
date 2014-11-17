@@ -35,7 +35,7 @@ query_create_schema_impl (query_result *r, char *name, int strict)
   // make checks
   assert_inner(r, "query_result_create");
   schema *s = datastore_get_schema_by_name(name);
-  parser_assert_err(QUERY_ERR_SCHEMA_CREATE_EEXISTS, !(strict && s), name);
+  parser_assert_err(QUERY_ERR_SCHEMA_EEXISTS, !(strict && s), name);
 
   // handle query
   if (s)
@@ -71,7 +71,7 @@ query_create_schema (query_arg *args)
   // return
   if (res)
     {
-      free(r);
+      query_result_destroy(r);
       return NULL;
     }
   return r;
@@ -83,7 +83,7 @@ query_drop_schema_impl (query_result *r, char *name, int strict)
   // make checks
   assert_inner(r, "query_result_create");
   schema *s = datastore_get_schema_by_name(name);
-  parser_assert_err(QUERY_ERR_SCHEMA_DROP_NOEXIST, !(strict && !s), name);
+  parser_assert_err(QUERY_ERR_SCHEMA_NOEXIST, !(strict && !s), name);
 
   // handle query
   if (!s)
@@ -115,7 +115,7 @@ query_drop_schema (query_arg *args)
   // return
   if (res)
     {
-      free(r);
+      query_result_destroy(r);
       return NULL;
     }
   return r;
@@ -153,7 +153,7 @@ query_show_schemata (unused query_arg *args)
   // return
   if (res)
     {
-      free(r);
+      query_result_destroy(r);
       return NULL;
     }
   return r;
@@ -165,7 +165,7 @@ query_use_impl (query_result *r, char *name)
   // make checks
   assert_inner(r, "query_result_create");
   schema *s = datastore_get_schema_by_name(name);
-  parser_assert_err(QUERY_ERR_SCHEMA_USE_NOEXIST, s, name);
+  parser_assert_err(QUERY_ERR_SCHEMA_NOEXIST, s, name);
 
   // handle query
   current_schema = s;
@@ -191,51 +191,143 @@ query_use (query_arg *args)
   // return
   if (res)
     {
-      free(r);
+      query_result_destroy(r);
       return NULL;
     }
   return r;
 }
 
-// FIXME: remove debug include
-#include <stdio.h>
-
-query_result*
-query_create_table (unused query_arg *args)
+static int may_fail
+query_create_table_impl (query_result *r, char *schema_name, char *name, int strict, tok_column_vector *columns)
 {
-  // extract arguments
-  char *name = args[0].string;
-  int strict = args[1].boolean;
-  tok_column_vector *columns = args[2].pointer;
+  // make checks
+  assert_inner(r, "query_result_create");
+  parser_assert_err(QUERY_ERR_NO_SCHEMA_SELECTED, schema_name || current_schema);
+  schema *s = current_schema;
+  if (schema_name)
+    s = datastore_get_schema_by_name(schema_name);
+  parser_assert_err(QUERY_ERR_SCHEMA_NOEXIST, s, schema_name);
 
-  printf("name    : %s\n", name);
-  printf("strict  : %u\n", strict);
-  printf("columns : %zu\n", columns->nitems);
-  printf("\n");
+  table *t = schema_get_table_by_name(s, name);
+  parser_assert_err(QUERY_ERR_TABLE_EEXISTS, !(strict && t), name);
+  if (t)
+    return 0;
+
+  // handle query
+  t = table_create(name);
+  assert_inner(t, "table_create");
 
   size_t i;
   for (i = 0; i < columns->nitems; ++i)
     {
-      printf("column %02zu\n", i);
-      printf("  name  : %s\n", columns->items[i].name);
-      printf("  type  : %u\n", columns->items[i].type.type);
-      printf("  width : %u\n", columns->items[i].type.width);
+      column *c = table_get_column_by_name(t, columns->items[i].name);
+      if (c)
+        {
+          table_destroy(t);
+          parser_assert_err(QUERY_ERR_COLUMN_EEXISTS, 0, columns->items[i].name);
+        }
+
+      c = column_create(columns->items[i].name, columns->items[i].type.type, columns->items[i].type.width);
+      if (!c)
+        {
+          table_destroy(t);
+          assert_inner(0, "column_create");
+        }
+
+      int res = table_add_column(t, c);
+      if (res)
+        {
+          table_destroy(t);
+          column_destroy(c);
+          assert_inner(0, "table_add_column");
+        }
     }
 
-  // create result instance
-  query_result *r = query_result_create();
-  assert_inner_ptr(r, "query_result_create");
+  int res = schema_add_table(s, t);
+  if (res)
+    {
+      table_destroy(t);
+      assert_inner(0, "schema_add_table");
+    }
 
-  return r;
+  return 0;
 }
 
 query_result*
-query_drop_table (unused query_arg *args)
+query_create_table (query_arg *args)
 {
+  // extract arguments
+  char *name = args[0].string;
+  char *schema = args[1].string;
+  int strict = args[2].boolean;
+  tok_column_vector *columns = args[3].pointer;
+
   // create result instance
   query_result *r = query_result_create();
-  assert_inner_ptr(r, "query_result_create");
 
+  // call impl
+  int res = query_create_table_impl(r, schema, name, strict, columns);
+
+  // free resources
+  free(name);
+  free(schema);
+  vector_clear(columns);
+
+  // return
+  if (res)
+    {
+      query_result_destroy(r);
+      return NULL;
+   }
+  return r;
+}
+
+static int may_fail
+query_drop_table_impl (query_result *r, char *schema_name, char *name, int strict)
+{
+  // make checks
+  assert_inner(r, "query_result_create");
+  parser_assert_err(QUERY_ERR_NO_SCHEMA_SELECTED, schema_name || current_schema);
+  schema *s = current_schema;
+  if (schema_name)
+    s = datastore_get_schema_by_name(schema_name);
+  parser_assert_err(QUERY_ERR_SCHEMA_NOEXIST, s, schema_name);
+
+  table *t = schema_get_table_by_name(s, name);
+  parser_assert_err(QUERY_ERR_TABLE_NOEXIST, !(strict && !t), name);
+  if (!t)
+    return 0;
+
+  // handle query
+  schema_remove_table(s, t);
+
+  return 0;
+}
+
+query_result*
+query_drop_table (query_arg *args)
+{
+  // extract arguments
+  char *name = args[0].string;
+  char *schema = args[1].string;
+  int strict = args[2].boolean;
+
+  // create result instance
+  query_result *r = query_result_create();
+
+  // call impl
+  int res = query_drop_table_impl(r, schema, name, strict);
+
+  // free resources
+  free(name);
+  free(schema);
+
+  // return
+  if (res)
+    {
+      query_result_destroy(r);
+      return NULL;
+    }
   return r;
 }
 

@@ -51,3 +51,27 @@ table_destroy (table *t)
   free(t->name);
   free(t);
 }
+
+column*
+table_get_column_by_name (table *t, const char *name)
+{
+  unsigned int i;
+  for (i = 0; i < t->ncolumns; ++i)
+    if (!strcmp(t->columns[i]->name, name))
+      return t->columns[i];
+
+  return NULL;
+}
+
+int
+table_add_column (table *t, column *c)
+{
+  ++(t->ncolumns);
+  void *new = realloc(t->columns, sizeof(*(t->columns)) * t->ncolumns);
+  assert_inner(new, "realloc");
+
+  t->columns = new;
+  t->columns[t->ncolumns - 1] = c;
+
+  return 0;
+}

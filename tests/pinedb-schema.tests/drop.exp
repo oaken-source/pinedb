@@ -41,36 +41,36 @@ set test_name "drop a non-existing schema"
 given an executable "../pinedb/pinedb" \
   when I run \
   and I send "drop schema `test`;\r" \
-  then I should see "unable to drop schema `test`: does not exist" \
+  then I should see "error: schema `test`: does not exist" \
   when I send "drop schema if exists `test`;\r" \
   then I should see "ok" \
   when I send "show schemata;\r\x04" \
   then I should see "returned 0 rows" \
-  and it should not return 0 \
+  and it should return 0 \
   when I run \
   and I send "drop database `test`;\r" \
-  then I should see "unable to drop schema `test`: does not exist" \
+  then I should see "error: schema `test`: does not exist" \
   when I send "drop database if exists `test`;\r" \
   then I should see "ok" \
   when I send "show databases;\r\x04" \
   then I should see "returned 0 rows" \
-  and it should not return 0 \
+  and it should return 0 \
   when I run \
   and I send "drop schema test;\r" \
-  then I should see "unable to drop schema `test`: does not exist" \
+  then I should see "error: schema `test`: does not exist" \
   when I send "drop schema if exists test;\r" \
   then I should see "ok" \
   when I send "show schemata;\r\x04" \
   then I should see "returned 0 rows" \
-  and it should not return 0 \
+  and it should return 0 \
   when I run \
   and I send "drop database test;\r" \
-  then I should see "unable to drop schema `test`: does not exist" \
+  then I should see "error: schema `test`: does not exist" \
   when I send "drop database if exists test;\r" \
   then I should see "ok" \
   when I send "show databases;\r\x04" \
   then I should see "returned 0 rows" \
-  and it should not return 0
+  and it should return 0
 
 
 set test_name "drop multiple schemata"

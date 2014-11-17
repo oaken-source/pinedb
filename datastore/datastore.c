@@ -52,8 +52,10 @@ int
 datastore_add_schema (schema *s)
 {
   ++(datastore.nschemata);
-  datastore.schemata = realloc(datastore.schemata, sizeof(*(datastore.schemata)) * datastore.nschemata);
-  assert_inner(datastore.schemata, "realloc");
+  void *new = realloc(datastore.schemata, sizeof(*(datastore.schemata)) * datastore.nschemata);
+  assert_inner(new, "realloc");
+
+  datastore.schemata = new;
   datastore.schemata[datastore.nschemata - 1] = s;
 
   return 0;

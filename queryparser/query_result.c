@@ -42,8 +42,11 @@ query_result_create (void)
 void
 query_result_destroy (query_result *r)
 {
-  free(r->items);
-  free(r);
+  if (r)
+    {
+      free(r->items);
+      free(r);
+    }
 }
 
 void

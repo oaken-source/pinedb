@@ -53,3 +53,41 @@ schema_destroy (schema *s)
   free(s->name);
   free(s);
 }
+
+table*
+schema_get_table_by_name (schema *s, const char *name)
+{
+  unsigned int i;
+  for (i = 0; i < s->ntables; ++i)
+    if (!strcmp(s->tables[i]->name, name))
+      return s->tables[i];
+
+  return NULL;
+}
+
+int
+schema_add_table (schema *s, table *t)
+{
+  ++(s->ntables);
+  void *new = realloc(s->tables, sizeof(*(s->tables)) * s->ntables);
+  assert_inner(new, "realloc");
+
+  s->tables = new;
+  s->tables[s->ntables - 1] = t;
+
+  return 0;
+}
+
+void
+schema_remove_table (schema *s, table *t)
+{
+  unsigned int i;
+  for (i = 0; i < s->ntables; ++i)
+    if (s->tables[i] == t)
+      break;
+  for (++i; i < s->ntables; ++i)
+    s->tables[i - 1] = s->tables[i];
+
+  --(s->ntables);
+  table_destroy(t);
+}

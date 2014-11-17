@@ -63,3 +63,9 @@ struct tok_statement
     } while (0)
 
 vector_declare(tok_column_vector, struct tok_column);
+
+struct tok_tbl_name
+{
+  char *table;
+  char *schema;
+};

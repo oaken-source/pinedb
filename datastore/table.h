@@ -40,3 +40,7 @@ typedef struct table table;
 table *table_create (const char *name) may_fail;
 
 void table_destroy (table *t);
+
+column *table_get_column_by_name (table *t, const char *name);
+
+int table_add_column (table *t, column *c) may_fail;

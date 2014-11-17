@@ -68,16 +68,24 @@ enum queryparser_warning_types
 /* enumeration of all queryparser error types and their string representation */
 enum error_types
 {
+  QUERY_ERR_SCHEMA_EEXISTS,
+  #define QUERY_ERR_SCHEMA_EEXISTS_STR "schema `%s`: already exists"
+  QUERY_ERR_SCHEMA_NOEXIST,
+  #define QUERY_ERR_SCHEMA_NOEXIST_STR "schema `%s`: does not exist"
+  QUERY_ERR_TABLE_EEXISTS,
+  #define QUERY_ERR_TABLE_EEXISTS_STR "table `%s`: already exists"
+  QUERY_ERR_TABLE_NOEXIST,
+  #define QUERY_ERR_TABLE_NOEXIST_STR "table `%s`: does not exist"
+  QUERY_ERR_COLUMN_EEXISTS,
+  #define QUERY_ERR_COLUMN_EEXISTS_STR "column `%s`: already exists"
+  QUERY_ERR_COLUMN_NOEXIST,
+  #define QUERY_ERR_COLUMN_NOEXIST_STR "column `%s`: does not exist"
   QUERY_ERR_PARSE,
   #define QUERY_ERR_PARSE_STR "%s"
   QUERY_ERR_FAILED,
   #define QUERY_ERR_FAILED_STR "query failed"
-  QUERY_ERR_SCHEMA_CREATE_EEXISTS,
-  #define QUERY_ERR_SCHEMA_CREATE_EEXISTS_STR "unable to create schema `%s`: already exists"
-  QUERY_ERR_SCHEMA_DROP_NOEXIST,
-  #define QUERY_ERR_SCHEMA_DROP_NOEXIST_STR "unable to drop schema `%s`: does not exist"
-  QUERY_ERR_SCHEMA_USE_NOEXIST,
-  #define QUERY_ERR_SCHEMA_USE_NOEXIST_STR "unable to use schema `%s`: does not exist"
-  QUERY_ERR_CONVERSION
+  QUERY_ERR_CONVERSION,
   #define QUERY_ERR_CONVERSION_STR "`%s'"
+  QUERY_ERR_NO_SCHEMA_SELECTED,
+  #define QUERY_ERR_NO_SCHEMA_SELECTED_STR "no schema selected"
 };
