@@ -51,24 +51,10 @@
 
   static int string_to_int(int *res, const char *str) may_fail;
 
-  #define statement_push_arg(S, TYPE, A) \
-      do { \
-        ++((S).nargs); \
-        (S).args = realloc((S).args, sizeof(*((S).args)) * (S).nargs); \
-        assert_inner((S).args, "realloc"); \
-        (S).args[(S).nargs - 1].TYPE = (A); \
-      } while (0)
-
   #define statement_set_arg(S, N, TYPE, A) \
       do { \
         (S).args[(N)].TYPE = (A); \
       } while (0)
-
-  struct vector
-  {
-    void *items;
-    int nitems;
-  };
 
 %}
 
@@ -80,10 +66,10 @@
   char *string;
 
   struct tok_statement statement;
+  struct tok_column column;
   struct tok_datatype datatype;
 
-  struct tok_column column;
-  struct vector vector;
+  tok_column_vector columns;
 }
 
 %token <token> CREATE DROP SHOW USE SCHEMA SCHEMATA TABLE TABLES INT VARCHAR IF_NOT_EXISTS IF_EXISTS UNDEFINED
@@ -94,10 +80,10 @@
 %type <string> nt_name
 
 %type <statement> nt_statement
+%type <column> nt_table_create_definition
 %type <datatype> nt_data_type nt_column_definition
 
-%type <vector> nt_table_create_definitions
-%type <column> nt_table_create_definition
+%type <columns> nt_table_create_definitions
 
 
 %destructor { free($$.v); } IDENTIFIER BT_IDENTIFIER NUMBER
@@ -135,8 +121,7 @@ nt_statement:
         statement_init($$, query_create_table);
         statement_set_arg($$, 0, string, $4);
         statement_set_arg($$, 1, boolean, !$3);
-        statement_set_arg($$, 2, pointer, $6.items);
-        statement_set_arg($$, 3, integer, $6.nitems);
+        statement_set_arg($$, 2, pointer, &$6);
       }
   | DROP SCHEMA nt_if_exists nt_name
       {
@@ -174,18 +159,17 @@ nt_statement:
 nt_table_create_definitions:
     nt_table_create_definition
       {
-        $$.items = malloc(sizeof($1));
-        assert_inner($$.items, "malloc");
-        ((struct tok_column*)$$.items)[0] = $1;
-        $$.nitems = 1;
+        vector_init(&$$);
+        int res = vector_push(&$$, $1);
+        assert_weak(!res, "vector_push");
+        parser_assert_err(QUERY_ERR_FAILED, !res);
       }
   | nt_table_create_definitions ',' nt_table_create_definition
       {
         $$ = $1;
-        ++($$.nitems);
-        $$.items = realloc($$.items, sizeof($3) * $$.nitems);
-        assert_inner($$.items, "realloc");
-        ((struct tok_column*)$$.items)[$$.nitems - 1] = $3;
+        int res = vector_push(&$$, $3);
+        assert_weak(!res, "vector_push");
+        parser_assert_err(QUERY_ERR_FAILED, !res);
       }
 ;
 

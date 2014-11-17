@@ -21,6 +21,7 @@
 
 #include "query.h"
 #include "assertions.h"
+#include "parser_tokens.h"
 
 #include "datastore/datastore.h"
 
@@ -196,14 +197,29 @@ query_use (query_arg *args)
   return r;
 }
 
+#include <stdio.h>
+
 query_result*
 query_create_table (unused query_arg *args)
 {
   // extract arguments
-  //char *name = args[0].string;
-  //int strict = args[1].boolean;
-  //column_def *cols = args[2].pointer;
-  //int ncols = args[3].integer;
+  char *name = args[0].string;
+  int strict = args[1].boolean;
+  tok_column_vector *columns = args[2].pointer;
+
+  printf("name    : %s\n", name);
+  printf("strict  : %u\n", strict);
+  printf("columns : %zu\n", columns->nitems);
+  printf("\n");
+
+  size_t i;
+  for (i = 0; i < columns->nitems; ++i)
+    {
+      printf("column %02zu\n", i);
+      printf("  name  : %s\n", columns->items[i].name);
+      printf("  type  : %u\n", columns->items[i].type.type);
+      printf("  width : %u\n", columns->items[i].type.width);
+    }
 
   // create result instance
   query_result *r = query_result_create();

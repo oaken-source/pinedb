@@ -1,8 +1,8 @@
 
 /******************************************************************************
- *                        pinedb in-memory database                           *
+ *                                  Grapes                                    *
  *                                                                            *
- *    Copyright (C) 2014  Andreas Grapentin                                   *
+ *    Copyright (C) 2013 - 2014  Andreas Grapentin                            *
  *                                                                            *
  *    This program is free software: you can redistribute it and/or modify    *
  *    it under the terms of the GNU General Public License as published by    *
@@ -19,47 +19,26 @@
  ******************************************************************************/
 
 
-#pragma once
+#include "vector.h"
 
-#include <config.h>
+#include <string.h>
 
-#include "query.h"
-
-#include "datastore/datastore.h"
-
-#include <grapes/vector.h>
-
-struct yystoken
+void
+_vector_init_impl (struct _vector_generic *v)
 {
-  char *v;
-  unsigned int l;
-  unsigned int c;
-};
-typedef struct yystoken yystoken;
+  v->items = NULL;
+  v->nitems = 0;
+}
 
-struct tok_datatype
+int
+_vector_push_impl(struct _vector_generic *v, void *item, size_t size)
 {
-  datatype type;
-  int width;
-};
+  ++(v->nitems);
+  void *new = realloc(v->items, v->nitems * size);
+  assert_inner(new, "realloc");
 
-struct tok_column
-{
-  char *name;
-  struct tok_datatype type;
-};
+  v->items = new;
+  memcpy(v->items + (v->nitems - 1) * size, item, size);
 
-struct tok_statement
-{
-  query_result*(*func)(query_arg*);
-  const char *func_name;
-  query_arg args[4];
-};
-
-#define statement_init(S, TYPE) \
-    do { \
-      (S).func = &(TYPE); \
-      (S).func_name = #TYPE; \
-    } while (0)
-
-vector_declare(tok_column_vector, struct tok_column);
+  return 0;
+}

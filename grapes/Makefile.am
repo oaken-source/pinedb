@@ -3,7 +3,7 @@
 
 noinst_LTLIBRARIES = libgrapes.la
 
-libgrapes_la_SOURCES = feedback.c feedback.h file.c file.h util.h
+libgrapes_la_SOURCES = feedback.c feedback.h file.c file.h vector.c vector.h util.h
 AM_CFLAGS += -I${top_srcdir}
 
 if PROFILING

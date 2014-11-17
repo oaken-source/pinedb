@@ -1,8 +1,8 @@
 
 /******************************************************************************
- *                        pinedb in-memory database                           *
+ *                                  Grapes                                    *
  *                                                                            *
- *    Copyright (C) 2014  Andreas Grapentin                                   *
+ *    Copyright (C) 2013 - 2014  Andreas Grapentin                            *
  *                                                                            *
  *    This program is free software: you can redistribute it and/or modify    *
  *    it under the terms of the GNU General Public License as published by    *
@@ -21,45 +21,33 @@
 
 #pragma once
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
 
-#include "query.h"
+#include <grapes/util.h>
 
-#include "datastore/datastore.h"
+#include <stdlib.h>
 
-#include <grapes/vector.h>
+#define vector_declare(NAME, TYPE) \
+    struct vector_ ## NAME \
+    { \
+      TYPE *items; \
+      size_t nitems; \
+    }; \
+    typedef struct vector_ ## NAME NAME;
 
-struct yystoken
+#define vector_init(V) _vector_init_impl((struct _vector_generic*)V)
+
+#define vector_push(V, ITEM) _vector_push_impl((struct _vector_generic*)V, &(ITEM), sizeof(ITEM))
+
+struct _vector_generic
 {
-  char *v;
-  unsigned int l;
-  unsigned int c;
-};
-typedef struct yystoken yystoken;
-
-struct tok_datatype
-{
-  datatype type;
-  int width;
-};
-
-struct tok_column
-{
-  char *name;
-  struct tok_datatype type;
+  void *items;
+  size_t nitems;
 };
 
-struct tok_statement
-{
-  query_result*(*func)(query_arg*);
-  const char *func_name;
-  query_arg args[4];
-};
+void _vector_init_impl(struct _vector_generic *v);
 
-#define statement_init(S, TYPE) \
-    do { \
-      (S).func = &(TYPE); \
-      (S).func_name = #TYPE; \
-    } while (0)
+int _vector_push_impl(struct _vector_generic *v, void *item, size_t size) may_fail;
 
-vector_declare(tok_column_vector, struct tok_column);

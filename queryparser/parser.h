@@ -70,6 +70,8 @@ enum error_types
 {
   QUERY_ERR_PARSE,
   #define QUERY_ERR_PARSE_STR "%s"
+  QUERY_ERR_FAILED,
+  #define QUERY_ERR_FAILED_STR "query failed"
   QUERY_ERR_SCHEMA_CREATE_EEXISTS,
   #define QUERY_ERR_SCHEMA_CREATE_EEXISTS_STR "unable to create schema `%s`: already exists"
   QUERY_ERR_SCHEMA_DROP_NOEXIST,
