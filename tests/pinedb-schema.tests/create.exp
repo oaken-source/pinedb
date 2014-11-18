@@ -54,10 +54,10 @@ set test_name "test for schema creation using weird names"
 # the query should succeed for the valid character set without backticks
 given an executable "../pinedb/pinedb" \
   when I run \
-  and I send "create schema abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$;\r" \
+  and I send "create schema abcxyzABCXYZ012_$;\r" \
   then I should see "ok" \
   when I send "show schemata;\r\x04" \
-  then I should see "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_\\\$" \
+  then I should see "abcxyzABCXYZ012_\\\$" \
   and I should see "ok: returned 1 rows" \
   and it should return 0
 # the query should fail if invalid characters are used

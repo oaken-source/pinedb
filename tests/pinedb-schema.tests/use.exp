@@ -33,9 +33,9 @@ set test_name "test for query using with weird names"
 # the query should succeed for the valid character set without quoting
 given an executable "../pinedb/pinedb" \
   when I run \
-  and I send "create schema abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$;\r" \
+  and I send "create schema abcxyzABCXYZ012_$;\r" \
   then I should see "ok" \
-  when I send "use abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$;\r\x04" \
+  when I send "use abcxyzABCXYZ012_$;\r\x04" \
   then I should see "ok" \
   and it should return 0
 # the query should fail if invalid characters are used
