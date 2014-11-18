@@ -104,7 +104,7 @@ query_result_print (const query_result *r)
 
       for (i = r->width; i < r->nitems; ++i)
         {
-          if (!((i - 1) % r->width))
+          if (!(i % r->width))
             printf("\n |");
           int s = w[i % r->width];
           printf(" %*.*s |", s, s, r->items[i]);

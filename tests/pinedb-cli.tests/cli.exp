@@ -1,17 +1,25 @@
 
 # exp_internal 1
 
-# test for --quiet / -q option
-set test_name "\[--quiet/-q\]"
+### tests for --quiet / -q option
+set test_name "tests for --quiet / -q option"
+# -q / --quiet should be accepted
 given an executable "../pinedb/pinedb" \
   when I run with parameters "$srcdir/test.sql --quiet" \
   then it should return 0 \
   when I run with parameters "$srcdir/test.sql -q" \
   then it should return 0
+# other than that, they do nothing yet
 
-
-# test for --help / -? option
-set test_name "\[--help/-?\]"
+### test for --help / -? option
+set test_name "test for --help / -? option"
+# --help / -h should be accepted
+given an executable "../pinedb/pinedb" \
+  when I run with parameters "$srcdir/test.sql --help" \
+  then it should return 0 \
+  when I run with parameters "$srcdir/test.sql -?" \
+  then it should return 0
+# --help / -h should display the help messsage and exit
 given an executable "../pinedb/pinedb" \
   when I run with parameters "--help" \
   then I should see "turn a specific category of warnings on or off" \
@@ -20,20 +28,32 @@ given an executable "../pinedb/pinedb" \
   then I should see "turn a specific category of warnings on or off" \
   and it should return 0
 
-
-# test for --usage option
-set test_name "\[--usage\]"
+### test for --usage option
+set test_name "test for --usage option"
+# --usage should be accepted
 given an executable "../pinedb/pinedb" \
-  when I run with parameters "--usage" \
-  then I should not see "turn a specific category of warnings on or off" \
-  and it should return 0 \
+  when I run with parameters "$srcdir/test.sql --usage" \
+  then it should return 0
+# --usage should display a short usage message and exit
+given an executable "../pinedb/pinedb" \
   when I run with parameters "--usage" \
   then I should see "Usage: pinedb" \
   and it should return 0
+# --usage should not display the long help message
+given an executable "../pinedb/pinedb" \
+  when I run with parameters "--usage" \
+  then I should not see "turn a specific category of warnings on or off" \
+  and it should return 0
 
-
-# test for --version / -V option
-set test_name "\[--version/-V\]"
+### test for --version / -V option
+set test_name "test for --version / -V option"
+# --version / -V should be accepted
+given an executable "../pinedb/pinedb" \
+  when I run with parameters "$srcdir/test.sql --version" \
+  then it should return 0 \
+  when I run with parameters "$srcdir/test.sql -V" \
+  then it should return 0
+# --version / -V should display the program version and exit
 given an executable "../pinedb/pinedb" \
   when I run with parameters "--version" \
   then I should see "pinedb 0.1" \
@@ -42,15 +62,42 @@ given an executable "../pinedb/pinedb" \
   then I should see "pinedb 0.1" \
   and it should return 0
 
-
-# test for -W flag family
-set test_name "\[-W\[no-\]<warnings>\]"
+### test for -W flag family
+set test_name "test for -W flag family"
+# -Wall should be accepted
 given an executable "../pinedb/pinedb" \
   when I run with parameters "$srcdir/test.sql -Wall" \
-  then it should return 0 \
+  then it should return 0
+# unknown -W flags should lead to errors
+given an executable "../pinedb/pinedb" \
   when I run with parameters "$srcdir/test.sql -Wnon-existant-error" \
   then I should see "error: unrecognized warning flag: -Wnon-existant-error" \
   and it should not return 0
+
+### test for prompt formatting
+set test_name "test for prompt formatting"
+# stdin mode should prompt the user with `>`
+given an executable "../pinedb/pinedb" \
+  when I run \
+  then I should see ">" \
+  when I send "\n" \
+  then I should see ">" \
+  when I send "\x04" \
+  then I should not see ">" \
+  and it should return 0
+# file mode should not prompt with `>`
+given an executable "../pinedb/pinedb" \
+  when I run with parameters "$srcdir/test.sql" \
+  then I should not see ">" \
+  and it should return 0
+
+### test for input handling
+set test_name "test for input handling"
+# the program should terminate on EOF
+given an executable "../pinedb/pinedb" \
+  when I run \
+  and I send "\x04" \
+  then it should return 0
 
 
 send_user "\n"

@@ -54,6 +54,13 @@ schema_destroy (schema *s)
   free(s);
 }
 
+table**
+schema_get_tables (schema *s, unsigned int *ntables)
+{
+  *ntables = s->ntables;
+  return s->tables;
+}
+
 table*
 schema_get_table_by_name (schema *s, const char *name)
 {

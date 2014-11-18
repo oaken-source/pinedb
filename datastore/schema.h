@@ -41,6 +41,8 @@ schema *schema_create(const char *name) may_fail;
 
 void schema_destroy(schema *s);
 
+table **schema_get_tables(schema *s, unsigned int *ntables);
+
 table *schema_get_table_by_name(schema *s, const char *name);
 
 int schema_add_table (schema *s, table *t) may_fail;

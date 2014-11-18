@@ -331,12 +331,56 @@ query_drop_table (query_arg *args)
   return r;
 }
 
+// FIXME: remove debug include
+#include <stdio.h>
+
+static int may_fail
+query_show_tables_impl (query_result *r)
+{
+  // make checks
+  assert_inner(r, "query_result_create");
+
+  // propagate result set
+  unsigned int nschemata;
+  schema **schemata = datastore_get_schemata(&nschemata);
+
+  query_result_set_width(r, 2);
+  query_result_push_checked(r, "database");
+  query_result_push_checked(r, "table");
+
+  unsigned int i;
+  for (i = 0; i < nschemata; ++i)
+    {
+      unsigned int ntables;
+      table **tables = schema_get_tables(schemata[i], &ntables);
+
+      unsigned int j;
+      for (j = 0; j < ntables; ++j)
+        {
+          query_result_push_checked(r, schemata[i]->name);
+          query_result_push_checked(r, tables[j]->name);
+        }
+    }
+
+  return 0;
+}
+
 query_result*
 query_show_tables (unused query_arg *args)
 {
   // create result instance
   query_result *r = query_result_create();
-  assert_inner_ptr(r, "query_result_create");
 
+  // call impl
+  int res = query_show_tables_impl(r);
+
+  // return
+  if (res)
+    {
+      query_result_destroy(r);
+      return NULL;
+    }
   return r;
 }
+
+
