@@ -1,0 +1,38 @@
+
+# exp_internal 1
+
+set test_name "extensive use of all functions with graprof"
+given an executable "graprof" \
+  when I run with parameters "-M ../pinedb/pinedb" \
+  and I send "create schema test1;\r" \
+  then I should see "ok" \
+  when I send "create schema test1;\r" \
+  then I should see "error" \
+  when I send "create schema if not exists test1;\r" \
+  then I should see "ok" \
+  when I send "create schema if not exists test2;\r" \
+  then I should see "ok" \
+  when I send "create schema test3;\r" \
+  then I should see "ok" \
+  when I send "show schemata;\r" \
+  then I should see "ok" \
+  when I send "use test2;\r" \
+  then I should see "ok" \
+  when I send "use test4;\r" \
+  then I should see "error" \
+  when I send "drop schema test1;\r" \
+  then I should see "ok" \
+  when I send "drop schema test1;\r" \
+  then I should see "error" \
+  when I send "drop schema if exists test1;\r" \
+  then I should see "ok" \
+  when I send "drop schema if exists test2;\r" \
+  then I should see "ok" \
+  when I send "drop schema test3;\r" \
+  then I should see "ok" \
+  when I send "show schemata;\r" \
+  then I should see "ok" \
+  when I send "\x04" \
+  then write output to log
+
+send_user "\n"

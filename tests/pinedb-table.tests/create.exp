@@ -1,0 +1,44 @@
+
+# exp_internal 1
+
+set test_name "create a non-existing table"
+given an executable "../pinedb/pinedb" \
+  when I run \
+  and I send "create schema test;\r" \
+  then I should see "ok" \
+  when I send "create table `test`.`test` ( col int );\r" \
+  then I should see "ok" \
+  when I send "show tables;\r\x04" \
+  then I should see "ok: returned 1 rows" \
+  and it should return 0 \
+  when I run \
+  and I send "create schema test;\r" \
+  then I should see "ok" \
+  when I send "create table test.test ( col int );\r" \
+  then I should see "ok" \
+  when I send "show tables;\r\x04" \
+  then I should see "ok: returned 1 rows" \
+  and it should return 0 \
+  when I run \
+  and I send "create schema test;\r" \
+  then I should see "ok" \
+  when I send "use test;\r" \
+  then I should see "ok" \
+  when I send "create table test ( col int );\r" \
+  then I should see "ok" \
+  when I send "show tables;\r\x04" \
+  then I should see "ok: returned 1 rows" \
+  and it should return 0 \
+  when I run \
+  and I send "create schema test;\r" \
+  then I should see "ok" \
+  when I send "use test;\r" \
+  then I should see "ok" \
+  when I send "create table test ( col int );\r" \
+  then I should see "ok" \
+  when I send "show tables;\r\x04" \
+  then I should see "ok: returned 1 rows" \
+  and it should return 0
+
+
+send_user "\n"
