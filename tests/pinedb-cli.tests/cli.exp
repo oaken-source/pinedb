@@ -99,5 +99,4 @@ given an executable "../pinedb/pinedb" \
   and I send "\x04" \
   then it should return 0
 
-
 send_user "\n"
