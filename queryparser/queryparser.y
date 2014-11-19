@@ -73,12 +73,13 @@
   tok_column_vector columns;
 }
 
-%token <token> CREATE DROP SHOW USE SCHEMA SCHEMATA TABLE TABLES INT VARCHAR IF_NOT_EXISTS IF_EXISTS UNDEFINED
+%token <token> CREATE DROP SHOW USE SCHEMA SCHEMATA TABLE TABLES INT VARCHAR
+%token <token> IF_NOT_EXISTS IF_EXISTS UNDEFINED FROM IN
 %token <token> IDENTIFIER BT_IDENTIFIER NUMBER
 
 %type <boolean> nt_if_exists nt_if_not_exists
 %type <integer> nt_length nt_optional_length
-%type <string> nt_name
+%type <string> nt_name nt_from_or_in_schema
 
 %type <statement> nt_statement
 %type <column> nt_table_create_definition
@@ -147,10 +148,11 @@ nt_statement:
         queryparser_set_current_token($1);
         statement_init($$, query_show_schemata);
       }
-  | SHOW TABLES
+  | SHOW TABLES nt_from_or_in_schema
       {
         queryparser_set_current_token($1);
         statement_init($$, query_show_tables);
+        statement_set_arg($$, 0, string, $3);
       }
   | USE nt_name
       {
@@ -209,9 +211,17 @@ nt_data_type:
       }
 ;
 
+/* composite value rules */
+nt_from_or_in_schema:
+    /* empty */                                 { $$ = NULL; }
+  | FROM nt_name                                { $$ = $2; }
+  | IN nt_name                                  { $$ = $2; }
+;
+
 nt_tbl_name:
     nt_name                                     { $$.table = $1; $$.schema = NULL; }
   | nt_name '.' nt_name                         { $$.table = $3; $$.schema = $1; }
+;
 
 /* simple value rules */
 nt_name:

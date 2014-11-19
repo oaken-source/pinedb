@@ -337,32 +337,26 @@ query_drop_table (query_arg *args)
 #include <stdio.h>
 
 static int may_fail
-query_show_tables_impl (query_result *r)
+query_show_tables_impl (query_result *r, char *name)
 {
   // make checks
   assert_inner(r, "query_result_create");
+  parser_assert_err(QUERY_ERR_NO_SCHEMA_SELECTED, current_schema || name);
+  schema *s = current_schema;
+  if (name)
+    s = datastore_get_schema_by_name(name);
+  parser_assert_err(QUERY_ERR_SCHEMA_NOEXIST, s, name);
 
   // propagate result set
-  unsigned int nschemata;
-  schema **schemata = datastore_get_schemata(&nschemata);
-
-  query_result_set_width(r, 2);
-  query_result_push_checked(r, "database");
+  query_result_set_width(r, 1);
   query_result_push_checked(r, "table");
 
-  unsigned int i;
-  for (i = 0; i < nschemata; ++i)
-    {
-      unsigned int ntables;
-      table **tables = schema_get_tables(schemata[i], &ntables);
+  unsigned int ntables;
+  table **tables = schema_get_tables(s, &ntables);
 
-      unsigned int j;
-      for (j = 0; j < ntables; ++j)
-        {
-          query_result_push_checked(r, schemata[i]->name);
-          query_result_push_checked(r, tables[j]->name);
-        }
-    }
+  unsigned int i;
+  for (i = 0; i < ntables; ++i)
+    query_result_push_checked(r, tables[i]->name);
 
   return 0;
 }
@@ -370,11 +364,17 @@ query_show_tables_impl (query_result *r)
 query_result*
 query_show_tables (unused query_arg *args)
 {
+  // extract arguments
+  char *schema = args[0].string;
+
   // create result instance
   query_result *r = query_result_create();
 
   // call impl
-  int res = query_show_tables_impl(r);
+  int res = query_show_tables_impl(r, schema);
+
+  // free resources
+  free(schema);
 
   // return
   if (res)

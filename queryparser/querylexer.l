@@ -61,6 +61,8 @@ int                 { common_setup; return INT; }
 varchar             { common_setup; return VARCHAR; }
 if\ not\ exists     { common_setup; return IF_NOT_EXISTS; }
 if\ exists          { common_setup; return IF_EXISTS; }
+from                { common_setup; return FROM; }
+in                  { common_setup; return IN; }
 
 `[^`]*`             { common_setup;
                       yytext[yyleng - 1] = 0;
