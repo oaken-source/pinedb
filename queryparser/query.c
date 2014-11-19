@@ -198,7 +198,7 @@ query_use (query_arg *args)
 }
 
 static int may_fail
-query_create_table_impl (query_result *r, char *schema_name, char *name, int strict, tok_column_vector *columns)
+query_create_table_impl (query_result *r, char *schema_name, char *name, int strict, struct tok_column *columns, size_t ncolumns)
 {
   // make checks
   assert_inner(r, "query_result_create");
@@ -218,16 +218,16 @@ query_create_table_impl (query_result *r, char *schema_name, char *name, int str
   assert_inner(t, "table_create");
 
   size_t i;
-  for (i = 0; i < columns->nitems; ++i)
+  for (i = 0; i < ncolumns; ++i)
     {
-      column *c = table_get_column_by_name(t, columns->items[i].name);
+      column *c = table_get_column_by_name(t, columns[i].name);
       if (c)
         {
           table_destroy(t);
-          parser_assert_err(QUERY_ERR_COLUMN_EEXISTS, 0, columns->items[i].name);
+          parser_assert_err(QUERY_ERR_COLUMN_EEXISTS, 0, columns[i].name);
         }
 
-      c = column_create(columns->items[i].name, columns->items[i].type.type, columns->items[i].type.width);
+      c = column_create(columns[i].name, columns[i].type.type, columns[i].type.width);
       if (!c)
         {
           table_destroy(t);
@@ -260,18 +260,19 @@ query_create_table (query_arg *args)
   char *name = args[0].string;
   char *schema = args[1].string;
   int strict = args[2].boolean;
-  tok_column_vector *columns = args[3].pointer;
+  struct tok_column *columns = args[3].pointer;
+  size_t ncolumns = args[4].size;
 
   // create result instance
   query_result *r = query_result_create();
 
   // call impl
-  int res = query_create_table_impl(r, schema, name, strict, columns);
+  int res = query_create_table_impl(r, schema, name, strict, columns, ncolumns);
 
   // free resources
   free(name);
   free(schema);
-  vector_clear(columns);
+  free(columns);
 
   // return
   if (res)

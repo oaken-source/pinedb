@@ -53,7 +53,7 @@ struct tok_statement
 {
   query_result*(*func)(query_arg*);
   const char *func_name;
-  query_arg args[4];
+  query_arg args[5];
 };
 
 #define statement_init(S, TYPE) \

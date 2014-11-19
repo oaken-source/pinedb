@@ -37,6 +37,9 @@ table_create (const char *name)
       assert_inner_ptr(0, "strdup");
     }
 
+  t->columns = NULL;
+  t->ncolumns = 0;
+
   return t;
 }
 

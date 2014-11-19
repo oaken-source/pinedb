@@ -126,7 +126,8 @@ nt_statement:
         statement_set_arg($$, 0, string, $4.table);
         statement_set_arg($$, 1, string, $4.schema);
         statement_set_arg($$, 2, boolean, !$3);
-        statement_set_arg($$, 3, pointer, &$6);
+        statement_set_arg($$, 3, pointer, $6.items);
+        statement_set_arg($$, 4, size, $6.nitems);
       }
   | DROP SCHEMA nt_if_exists nt_name
       {

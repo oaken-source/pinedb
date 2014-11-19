@@ -23,12 +23,15 @@
 
 #include <config.h>
 
+#include <stdlib.h>
+
 union query_arg
 {
   int boolean;
   int integer;
   char *string;
   void *pointer;
+  size_t size;
 };
 typedef union query_arg query_arg;
 
