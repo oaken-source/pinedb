@@ -291,7 +291,9 @@ query_drop_table_impl (query_result *r, char *schema_name, char *name, int stric
   schema *s = current_schema;
   if (schema_name)
     s = datastore_get_schema_by_name(schema_name);
-  parser_assert_err(QUERY_ERR_SCHEMA_NOEXIST, s, schema_name);
+  parser_assert_err(QUERY_ERR_SCHEMA_NOEXIST, !(strict && !s), schema_name);
+  if (!s)
+    return 0;
 
   table *t = schema_get_table_by_name(s, name);
   parser_assert_err(QUERY_ERR_TABLE_NOEXIST, !(strict && !t), name);

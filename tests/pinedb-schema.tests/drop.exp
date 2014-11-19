@@ -155,7 +155,7 @@ given an executable "../pinedb/pinedb" \
   when I send "show schemata;\r\x04" \
   then I should see "ok: returned 1 rows" \
   and it should return 0
-# the query should succeed if the `if not exists` qualifier is used
+# the query should succeed if the `if exists` qualifier is used
 given an executable "../pinedb/pinedb" \
   when I run \
   and I send "create schema test1;\r" \
