@@ -7,7 +7,12 @@ EXTRA_DIST =  asparagus.exp \
 	      test.sql \
 	      pinedb-cli.tests/cli.exp \
 	      pinedb-schema.tests/create.exp \
-	      pinedb-schema.tests/drop.exp
+	      pinedb-schema.tests/drop.exp \
+	      pinedb-schema.tests/show.exp \
+	      pinedb-schema.tests/use.exp \
+	      pinedb-table.tests/create.exp \
+	      pinedb-table.tests/drop.exp \
+	      pinedb-table.tests/show.exp
 
 AUTOMAKE_OPTIONS = dejagnu
 

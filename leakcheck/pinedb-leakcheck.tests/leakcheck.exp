@@ -35,6 +35,8 @@ given an executable "graprof" \
   then I should see "ok" \
   when I send "create table if not exists test1.test1 ( col int );\r" \
   then I should see "ok" \
+  when I send "create table if not exists test1.test1 ( col int ) foo;\r" \
+  then I should see "error" \
   when I send "create table test3 ( col int );\r" \
   then I should see "ok" \
   when I send "show tables;\r" \

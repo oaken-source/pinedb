@@ -272,6 +272,9 @@ query_create_table (query_arg *args)
   // free resources
   free(name);
   free(schema);
+  size_t i;
+  for (i = 0; i < ncolumns; ++i)
+    free(columns[i].name);
   free(columns);
 
   // return

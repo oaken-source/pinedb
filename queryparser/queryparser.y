@@ -117,6 +117,30 @@
   free($$.table);
 } nt_tbl_name
 
+%destructor {
+  if (($$.func == &query_create_schema)
+      || ($$.func == &query_drop_schema)
+      || ($$.func == &query_show_tables)
+      || ($$.func == &query_use))
+    {
+      free($$.args[0].string);
+    }
+  else if ($$.func == &query_create_table)
+    {
+      free($$.args[0].string);
+      free($$.args[1].string);
+      size_t i;
+      for (i = 0; i < $$.args[4].size; ++i)
+        free(((struct tok_column*)$$.args[3].pointer)[i].name);
+      free($$.args[3].pointer);
+    }
+  else if ($$.func == &query_drop_table)
+    {
+      free($$.args[0].string);
+      free($$.args[1].string);
+    }
+} nt_statement
+
 %error-verbose
 
 %%
