@@ -95,7 +95,7 @@
 
 %destructor {
   free($$);
-} nt_name
+} nt_name nt_from_or_in_schema
 
 %destructor {
   size_t i;
@@ -107,10 +107,6 @@
 %destructor {
   free($$.name);
 } nt_table_create_definition
-
-%destructor {
-  free($$);
-} nt_from_or_in_schema
 
 %destructor {
   free($$.schema);
