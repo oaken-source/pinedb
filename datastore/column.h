@@ -42,6 +42,27 @@ struct column
 typedef struct column column;
 
 
+/* allocate and initialize a column
+ *
+ * params:
+ *   name - the name of the column
+ *   type - the datatype
+ *   width - the width of the field
+ *
+ * errors:
+ *   may fail and set errno for the same reasons as malloc and strdup
+ *
+ * returns:
+ *   a pointer to a column on success, NULL on failure
+ */
 column *column_create (const char *name, datatype type, int width) may_fail;
 
+/* destroy a column via the pointer returned by column_create
+ *
+ * params:
+ *   c - a pointer to a column
+ *
+ * errors:
+ *   the behaviour is undefined if an invalid pointer is passed
+ */
 void column_destroy (column *c);

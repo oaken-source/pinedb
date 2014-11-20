@@ -89,9 +89,33 @@
 %type <columns> nt_table_create_definitions
 
 
-%destructor { free($$.v); } IDENTIFIER BT_IDENTIFIER NUMBER
-%destructor { free($$); } nt_name
-%destructor { vector_clear(&$$); } nt_table_create_definitions
+%destructor {
+  free($$.v);
+} IDENTIFIER BT_IDENTIFIER NUMBER
+
+%destructor {
+  free($$);
+} nt_name
+
+%destructor {
+  size_t i;
+  for (i = 0; i < $$.nitems; ++i)
+    free($$.items[i].name);
+  vector_clear(&$$);
+} nt_table_create_definitions
+
+%destructor {
+  free($$.name);
+} nt_table_create_definition
+
+%destructor {
+  free($$);
+} nt_from_or_in_schema
+
+%destructor {
+  free($$.schema);
+  free($$.table);
+} nt_tbl_name
 
 %error-verbose
 

@@ -37,10 +37,50 @@ struct table
 typedef struct table table;
 
 
+/* allocate and initialize a table instance
+ *
+ * params:
+ *   name - the name of the table
+ *
+ * errors:
+ *   may fail and set errno for the same reasons as malloc and strdup
+ *
+ * returns:
+ *   a pointer to a table on success, NULL on failure
+ */
 table *table_create (const char *name) may_fail;
 
+/* destroy a table created by table_create
+ *
+ * params:
+ *   t - a pointer to a table
+ *
+ * erros:
+ *   the behaviour is undefined if the given pointer is invalid
+ */
 void table_destroy (table *t);
 
+/* get the column identified by the give name
+ *
+ * params:
+ *   t - a pointer to a table
+ *   name - the name of the queried column
+ *
+ * returns:
+ *   a pointer to a column, if found, NULL otherwise
+ */
 column *table_get_column_by_name (table *t, const char *name);
 
+/* add a column to a table
+ *
+ * params:
+ *   t - a pointer to a table
+ *   c - a pointer to a column
+ *
+ * errors:
+ *   may fail and set errno for the same reasons as realloc
+ *
+ * returns:
+ *   -1 on failure, 0 on success
+ */
 int table_add_column (table *t, column *c) may_fail;

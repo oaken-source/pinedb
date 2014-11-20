@@ -37,14 +37,73 @@ struct schema
 typedef struct schema schema;
 
 
+/* allocate and initialize a schema instance
+ *
+ * params:
+ *   name - the name of the schema
+ *
+ * errors:
+ *   may fail and set errno for the same reasons as malloc and strdup
+ *
+ * returns:
+ *   a pointer to a schema on success, NULL otherwise
+ */
 schema *schema_create(const char *name) may_fail;
 
+/* destroy a schema that was created using schema_create
+ *
+ * params:
+ *   s - a pointer to a schema
+ *
+ * errors:
+ *   the behaviour is undefined if the pointer is invalid
+ */
 void schema_destroy(schema *s);
 
+/* return the list of tables associated with the given schema
+ *
+ * params:
+ *   s - a pointer to a schema
+ *   ntables - the location where the number of returned tables is stored
+ *
+ * returns:
+ *   a pointer to the first element of an array of pointers to tables
+ */
 table **schema_get_tables(schema *s, unsigned int *ntables);
 
+/* return a table identified by the given name, if any
+ *
+ * params:
+ *   s - a pointer to a schema
+ *   name - the name of the searched table
+ *
+ * returns:
+ *   a pointer to a table, if found, NULL otherwise
+ */
 table *schema_get_table_by_name(schema *s, const char *name);
 
+/* add a table to the given schema
+ *
+ * params:
+ *   s - a pointer to a schema
+ *   t - a pointer to a table
+ *
+ * errors:
+ *   may fail and set errno for the same reasons as realloc
+ *
+ * returns:
+ *   -1 on failure, 0 on success
+ */
 int schema_add_table (schema *s, table *t) may_fail;
 
+/* remove a table from the given schema, if found, and destroy the table
+ * instance
+ *
+ * params:
+ *   s - a pointer to a schema
+ *   t - a pointer to a table
+ *
+ * errors:
+ *   the behaviour is undefined if the given pointer is invalid
+ */
 void schema_remove_table (schema *s, table *t);

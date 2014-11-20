@@ -25,10 +25,46 @@
 
 #include "schema.h"
 
+/* get the list of schemata associated with the datastore
+ *
+ * params:
+ *   nschemata - a pointer where the number of returned elements is stored
+ *
+ * returns:
+ *   a pointer to the first element of an array of pointers to schemata
+ */
 schema **datastore_get_schemata(unsigned int *nschemata);
 
+/* get a schema instance identified by the given name
+ *
+ * params:
+ *   name - the name of the queried schema
+ *
+ * returns:
+ *   a pointer to a schema, if one is found, NULL otherwise
+ */
 schema *datastore_get_schema_by_name(const char *name);
 
+/* add a schema instance to the datastore
+ *
+ * params:
+ *   s - a pointer to a schema
+ *
+ * errors:
+ *   may fail and set errno for the same reasons as realloc
+ *
+ * returns:
+ *   -1 on failure, 0 on success
+ */
 int datastore_add_schema(schema *s) may_fail;
 
+/* remove a schema from the datastore, if present, and destroy the schema
+ * instance
+ *
+ * params:
+ *   s - a pointer to a schema
+ *
+ * errors:
+ *   the behaviour is undefined, if the passed pointer is not a valid schema
+ */
 void datastore_remove_schema(schema *s);
