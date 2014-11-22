@@ -17,5 +17,3 @@ EXTRA_DIST =  asparagus.exp \
 AUTOMAKE_OPTIONS = dejagnu
 
 export DEJAGNU
-
-DEJATOOL = pinedb

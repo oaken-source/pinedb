@@ -1,85 +1,83 @@
 
-# exp_internal 1
-
 ### test for schema using
 set test_name "test for schema using"
 # simple use schema queries should set the current schema
-given an executable "../pinedb/pinedb" \
-  when I run \
-  and I send "create schema testschema;\r" \
-  then I should see "ok" \
-  when I send "use testschema;\r\x04" \
-  then I should see "ok" \
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "use testschema;\r\x04"
+  then I should see "ok"
   and it should return 0
 # it should do the same if the schema name is quoted using backticks
-given an executable "../pinedb/pinedb" \
-  when I run \
-  and I send "create schema testschema;\r" \
-  then I should see "ok" \
-  when I send "use `testschema`;\r\x04" \
-  then I should see "ok" \
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "use `testschema`;\r\x04"
+  then I should see "ok"
   and it should return 0
 # the query should be case insensitive
-given an executable "../pinedb/pinedb" \
-  when I run \
-  and I send "create schema testschema;\r" \
-  then I should see "ok" \
-  when I send "USE testschema;\r\x04" \
-  then I should see "ok" \
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "USE testschema;\r\x04"
+  then I should see "ok"
   and it should return 0
 
 ### test for query using with weird names
 set test_name "test for query using with weird names"
 # the query should succeed for the valid character set without quoting
-given an executable "../pinedb/pinedb" \
-  when I run \
-  and I send "create schema abcxyzABCXYZ012_$;\r" \
-  then I should see "ok" \
-  when I send "use abcxyzABCXYZ012_$;\r\x04" \
-  then I should see "ok" \
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema abcxyzABCXYZ012_$;\r"
+  then I should see "ok"
+  when I send "use abcxyzABCXYZ012_$;\r\x04"
+  then I should see "ok"
   and it should return 0
 # the query should fail if invalid characters are used
-given an executable "../pinedb/pinedb" \
-  when I run \
-  and I send "create schema `test:schema`;\r" \
-  then I should see "ok" \
-  when I send "use test:schema;\r\x04" \
-  then I should see "error: syntax error" \
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema `test:schema`;\r"
+  then I should see "ok"
+  when I send "use test:schema;\r\x04"
+  then I should see "error: syntax error"
   and it should return 0
 # the query should succeed if the invalid identifier is quoted using backticks
-given an executable "../pinedb/pinedb" \
-  when I run \
-  and I send "create schema `test:schema`;\r" \
-  then I should see "ok" \
-  when I send "use `test:schema`;\r\x04" \
-  then I should see "ok" \
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema `test:schema`;\r"
+  then I should see "ok"
+  when I send "use `test:schema`;\r\x04"
+  then I should see "ok"
   and it should return 0
 
 ### test for query using with nonexistant schemata
 set test_name "test for query using with nonexistant schemata"
 # the query should fail if a non existant schema is used
-given an executable "../pinedb/pinedb" \
-  when I run \
-  and I send "create schema test1;\r" \
-  then I should see "ok" \
-  when I send "use test2;\r\x04" \
-  then I should see "error: schema `test2`: does not exist" \
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "use test2;\r\x04"
+  then I should see "error: schema `test2`: does not exist"
   and it should return 0
 # it should also fail if the schema is quoted using backticks
-given an executable "../pinedb/pinedb" \
-  when I run \
-  and I send "create schema test1;\r" \
-  then I should see "ok" \
-  when I send "use `test2`;\r\x04" \
-  then I should see "error: schema `test2`: does not exist" \
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "use `test2`;\r\x04"
+  then I should see "error: schema `test2`: does not exist"
   and it should return 0
 # it should also fail if the schemata differ only in case
-given an executable "../pinedb/pinedb" \
-  when I run \
-  and I send "create schema test;\r" \
-  then I should see "ok" \
-  when I send "use TEST;\r\x04" \
-  then I should see "error: schema `TEST`: does not exist" \
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "use TEST;\r\x04"
+  then I should see "error: schema `TEST`: does not exist"
   and it should return 0
 
 send_user "\n"

@@ -3,72 +3,72 @@
 
 ### run an extensive workload and look for memory leaks
 set test_name "run an extensive workload and look for memory leaks"
-given an executable "graprof" \
-  when I run with parameters "-M ../pinedb/pinedb" \
-  and I send "show schemata;\r" \
-  then I should see "ok" \
-  when I send "create schema test1;\r" \
-  then I should see "ok" \
-  when I send "create schema test1;\r" \
-  then I should see "error" \
-  when I send "create schema if not exists test1;\r" \
-  then I should see "ok" \
-  when I send "create schema if not exists test2;\r" \
-  then I should see "ok" \
-  when I send "create schema test3;\r" \
-  then I should see "ok" \
-  when I send "show schemata;\r" \
-  then I should see "ok" \
-  when I send "use test2;\r" \
-  then I should see "ok" \
-  when I send "use test4;\r" \
-  then I should see "error" \
-  when I send "show tables;\r" \
-  then I should see "ok" \
-  when I send "show tables in test1;\r" \
-  then I should see "ok" \
-  when I send "create table test2 ( col1 int, col2 varchar (64) );\r" \
-  then I should see "ok" \
-  when I send "create table test2 ( col int );\r" \
-  then I should see "error" \
-  when I send "create table if not exists test2 ( col int );\r" \
-  then I should see "ok" \
-  when I send "create table if not exists test1.test1 ( col int );\r" \
-  then I should see "ok" \
-  when I send "create table if not exists test1.test1 ( col int ) foo;\r" \
-  then I should see "error" \
-  when I send "create table test3 ( col int );\r" \
-  then I should see "ok" \
-  when I send "show tables;\r" \
-  then I should see "ok" \
-  when I send "show tables in test1;\r" \
-  then I should see "ok" \
-  when I send "show tables in test3;\r" \
-  then I should see "ok" \
-  when I send "show tables in test4;\r" \
-  then I should see "error" \
-  when I send "drop table test2;\r" \
-  then I should see "ok" \
-  when I send "drop table test2;\r" \
-  then I should see "error" \
-  when I send "drop table if exists test2;\r" \
-  then I should see "ok" \
-  when I send "drop table if exists test1.test1;\r" \
-  then I should see "ok" \
-  when I send "drop schema test1;\r" \
-  then I should see "ok" \
-  when I send "drop schema test1;\r" \
-  then I should see "error" \
-  when I send "drop schema if exists test1;\r" \
-  then I should see "ok" \
-  when I send "drop schema if exists test2;\r" \
-  then I should see "ok" \
-  when I send "drop schema test3;\r" \
-  then I should see "ok" \
-  when I send "show schemata;\r" \
-  then I should see "ok" \
-  when I send "\x04" \
-  then write output to log \
+given an executable "graprof"
+  when I run with parameters "-M ../pinedb/pinedb"
+  and I send "show schemata;\r"
+  then I should see "ok"
+  when I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "create schema test1;\r"
+  then I should see "error"
+  when I send "create schema if not exists test1;\r"
+  then I should see "ok"
+  when I send "create schema if not exists test2;\r"
+  then I should see "ok"
+  when I send "create schema test3;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok"
+  when I send "use test2;\r"
+  then I should see "ok"
+  when I send "use test4;\r"
+  then I should see "error"
+  when I send "show tables;\r"
+  then I should see "ok"
+  when I send "show tables in test1;\r"
+  then I should see "ok"
+  when I send "create table test2 ( col1 int, col2 varchar (64) );\r"
+  then I should see "ok"
+  when I send "create table test2 ( col int );\r"
+  then I should see "error"
+  when I send "create table if not exists test2 ( col int );\r"
+  then I should see "ok"
+  when I send "create table if not exists test1.test1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table if not exists test1.test1 ( col int ) foo;\r"
+  then I should see "error"
+  when I send "create table test3 ( col int );\r"
+  then I should see "ok"
+  when I send "show tables;\r"
+  then I should see "ok"
+  when I send "show tables in test1;\r"
+  then I should see "ok"
+  when I send "show tables in test3;\r"
+  then I should see "ok"
+  when I send "show tables in test4;\r"
+  then I should see "error"
+  when I send "drop table test2;\r"
+  then I should see "ok"
+  when I send "drop table test2;\r"
+  then I should see "error"
+  when I send "drop table if exists test2;\r"
+  then I should see "ok"
+  when I send "drop table if exists test1.test1;\r"
+  then I should see "ok"
+  when I send "drop schema test1;\r"
+  then I should see "ok"
+  when I send "drop schema test1;\r"
+  then I should see "error"
+  when I send "drop schema if exists test1;\r"
+  then I should see "ok"
+  when I send "drop schema if exists test2;\r"
+  then I should see "ok"
+  when I send "drop schema test3;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok"
+  when I send "\x04"
+  then write the output to log
   and it should return 0
 
 send_user "\n"
