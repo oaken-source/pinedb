@@ -49,7 +49,7 @@
         queryparser_char = (S).c; \
       } while (0)
 
-  static int string_to_int(int *res, const char *str) may_fail;
+  static int string_to_int(int *res, const char *str) __may_fail;
 
   #define statement_set_arg(S, N, TYPE, A) \
       do { \

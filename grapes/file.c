@@ -56,7 +56,7 @@ file_map (const char *filename, size_t *length)
 int
 file_unmap (void *data, size_t length)
 {
-  if (data != file_map_empty)
+  if (data && (data != file_map_empty))
     {
       int res = munmap(data, length);
       assert_inner(!res, "munmap");

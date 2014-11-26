@@ -56,7 +56,7 @@ schema *datastore_get_schema_by_name(const char *name);
  * returns:
  *   -1 on failure, 0 on success
  */
-int datastore_add_schema(schema *s) may_fail;
+int datastore_add_schema(schema *s) __may_fail;
 
 /* remove a schema from the datastore, if present, and destroy the schema
  * instance

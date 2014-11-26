@@ -43,7 +43,7 @@
  * returns:
  *   a pointer to a query_result on success, NULL on failure
  */
-query_result* query_create_schema(query_arg *args) may_fail;
+query_result* query_create_schema(query_arg *args) __may_fail;
 
 /* execute a drop schema query
  *
@@ -59,7 +59,7 @@ query_result* query_create_schema(query_arg *args) may_fail;
  * returns:
  *   a pointer to a query_result on success, NULL on failure
  */
-query_result* query_drop_schema(query_arg *args) may_fail;
+query_result* query_drop_schema(query_arg *args) __may_fail;
 
 /* execute a show schemata statement
  *
@@ -73,7 +73,7 @@ query_result* query_drop_schema(query_arg *args) may_fail;
  * returns:
  *   a pointer to a query_result on success, NULL on failure
  */
-query_result* query_show_schemata(query_arg *args) may_fail;
+query_result* query_show_schemata(query_arg *args) __may_fail;
 
 /* execute a use statement
  *
@@ -87,7 +87,7 @@ query_result* query_show_schemata(query_arg *args) may_fail;
  * returns:
  *   a pointer to a query_result on success, NULL on failure
  */
-query_result* query_use (query_arg *args) may_fail;
+query_result* query_use (query_arg *args) __may_fail;
 
 /* execute a create table statement
  *
@@ -103,10 +103,10 @@ query_result* query_use (query_arg *args) may_fail;
  * returns:
  *   a pointer to a query_result on success, NULL on failuer
  */
-query_result* query_create_table (query_arg *args) may_fail;
+query_result* query_create_table (query_arg *args) __may_fail;
 
 /* FIXME: in the making */
-query_result* query_drop_table (query_arg *args) may_fail;
+query_result* query_drop_table (query_arg *args) __may_fail;
 
 /* FIXME: in the making */
-query_result* query_show_tables (query_arg *args) may_fail;
+query_result* query_show_tables (query_arg *args) __may_fail;

@@ -36,6 +36,20 @@ proc given_an_executable { exe } {
 }
 asparagus_register_step given_an_executable "given an executable"
 
+### given the c code ?source?
+#
+# sets the global `asparagus_source_code` to the given sorce and passes.
+proc given_the_c_code { code } {
+
+  global asparagus_source_code
+
+  set asparagus_source_code "$code"
+
+  pass_step
+
+}
+asparagus_register_step given_the_c_code "given the c code"
+
 ### when I run with parameters ?parameters?
 #
 # spawns the executable stored in `asparagus_executable_path`, which should be
@@ -121,6 +135,77 @@ proc when_I_send { str } {
 }
 asparagus_register_step when_I_send "when I send"
 
+### when I compile with cflags ?cflags?
+#
+# tries to compile the source code given in `asparagus_source_code` using a
+# call to `cc` with the given CFLAGS and sets the variable
+# `asparagus_executable_path` to the newly created binary.
+#
+# The step fails if the compilation fails, otherwise it passes
+proc when_I_compile_with_cflags { cflags } {
+
+  global asparagus_spawn_id
+  global asparagus_executable_path
+  global asparagus_source_code
+
+  set tmpdir [ file join "/tmp" "asparagus.[ pid ]" ]
+  file mkdir $tmpdir
+
+  if { [ catch {
+    spawn cc -x c -o $tmpdir/a.out {*}$cflags -
+    after 10
+    send "$asparagus_source_code\r\x04"
+  } msg ] } {
+    faíl_step "$msg"
+    return
+  }
+
+  set asparagus_spawn_id $spawn_id
+  set asparagus_executable_path "$tmpdir/a.out"
+
+  pass_step
+
+}
+asparagus_register_step when_I_compile_with_cflags "when I compile with cflags"
+
+### when I compile
+#
+# tries to compile the source code given in `asparagus_source_code` using a
+# call to `cc` and sets the variable `asparagus_executable_path` to the
+# newly created binary.
+#
+# The step fails if the compilation fails, otherwise it passes
+proc when_I_compile { } {
+
+  global asparagus_spawn_id
+  global asparagus_executable_path
+  global asparagus_source_code
+
+  set tmpdir [ file join "/tmp" "asparagus.[ pid ]" ]
+  file mkdir $tmpdir
+
+  if { [ catch {
+    spawn cc -x c -o $tmpdir/a.out -
+    after 10
+    send "$asparagus_source_code\r\x04"
+
+    expect {
+      eof { }
+      timeout { }
+    }
+  } msg ] } {
+    faíl_step "$msg"
+    return
+  }
+
+  set asparagus_spawn_id $spawn_id
+  set asparagus_executable_path "$tmpdir/a.out"
+
+  pass_step
+
+}
+asparagus_register_step when_I_compile "when I compile"
+
 ### then I should see ?string?
 #
 # expect output from the process identified by the global variable
@@ -131,6 +216,7 @@ asparagus_register_step when_I_send "when I send"
 proc then_I_should_see { str } {
 
   global asparagus_spawn_id
+  global asparagus_skipping
 
   if { ! [ string length $asparagus_spawn_id ] } {
     fail_step "not open"
@@ -144,13 +230,13 @@ proc then_I_should_see { str } {
     "$str" { }
     default {
       fail_step "not seen"
-      return
     }
 
   } } msg ] } {
     fail_step "$msg"
-    return
   }
+
+  if { $asparagus_skipping } { return }
 
   pass_step
 
@@ -167,6 +253,7 @@ asparagus_register_step then_I_should_see "then I should see"
 proc then_I_should_not_see { str } {
 
   global asparagus_spawn_id
+  global asparagus_skipping
 
   if { ! [ string length $asparagus_spawn_id ] } {
     fail_step "not open"
@@ -179,14 +266,14 @@ proc then_I_should_not_see { str } {
 
     "$str" {
       fail_step "seen"
-      return
     }
     default { }
 
   } } msg ] } {
     fail_step "$msg"
-    return
   }
+
+  if { $asparagus_skipping } { return }
 
   pass_step
 
@@ -252,7 +339,7 @@ proc then_it_should_not_return { code } {
   set spawn_id $asparagus_spawn_id
 
   # consume input until eof, if any
-  if [catch { expect {
+  if [ catch { expect {
     eof { }
     timeout {
       fail_step "timed out"
@@ -261,7 +348,7 @@ proc then_it_should_not_return { code } {
   } } ] { }
 
   # wait for spawned process
-  lassign [wait $asparagus_spawn_id] wait_pid spawnid os_error_flag value
+  lassign [ wait $asparagus_spawn_id ] wait_pid spawnid os_error_flag value
 
   if { $os_error_flag != 0 || $value == $code } {
     fail_step "returned $os_error_flag : $value"

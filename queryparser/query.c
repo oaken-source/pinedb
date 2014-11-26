@@ -29,7 +29,7 @@
 static schema *current_schema = NULL;
 
 
-static int may_fail
+static int __may_fail
 query_create_schema_impl (query_result *r, char *name, int strict)
 {
   // make checks
@@ -77,7 +77,7 @@ query_create_schema (query_arg *args)
   return r;
 }
 
-static int may_fail
+static int __may_fail
 query_drop_schema_impl (query_result *r, char *name, int strict)
 {
   // make checks
@@ -121,7 +121,7 @@ query_drop_schema (query_arg *args)
   return r;
 }
 
-static int may_fail
+static int __may_fail
 query_show_schemata_impl (query_result *r)
 {
   // make checks
@@ -142,7 +142,7 @@ query_show_schemata_impl (query_result *r)
 }
 
 query_result*
-query_show_schemata (unused query_arg *args)
+query_show_schemata (__unused query_arg *args)
 {
   // create result instance
   query_result *r = query_result_create();
@@ -159,7 +159,7 @@ query_show_schemata (unused query_arg *args)
   return r;
 }
 
-static int may_fail
+static int __may_fail
 query_use_impl (query_result *r, char *name)
 {
   // make checks
@@ -197,7 +197,7 @@ query_use (query_arg *args)
   return r;
 }
 
-static int may_fail
+static int __may_fail
 query_create_table_impl (query_result *r, char *schema_name, char *name, int strict, struct tok_column *columns, size_t ncolumns)
 {
   // make checks
@@ -286,7 +286,7 @@ query_create_table (query_arg *args)
   return r;
 }
 
-static int may_fail
+static int __may_fail
 query_drop_table_impl (query_result *r, char *schema_name, char *name, int strict)
 {
   // make checks
@@ -337,10 +337,7 @@ query_drop_table (query_arg *args)
   return r;
 }
 
-// FIXME: remove debug include
-#include <stdio.h>
-
-static int may_fail
+static int __may_fail
 query_show_tables_impl (query_result *r, char *name)
 {
   // make checks
@@ -366,7 +363,7 @@ query_show_tables_impl (query_result *r, char *name)
 }
 
 query_result*
-query_show_tables (unused query_arg *args)
+query_show_tables (query_arg *args)
 {
   // extract arguments
   char *schema = args[0].string;

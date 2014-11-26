@@ -48,7 +48,7 @@ typedef struct table table;
  * returns:
  *   a pointer to a table on success, NULL on failure
  */
-table *table_create (const char *name) may_fail;
+table *table_create (const char *name) __may_fail;
 
 /* destroy a table created by table_create
  *
@@ -83,4 +83,4 @@ column *table_get_column_by_name (table *t, const char *name);
  * returns:
  *   -1 on failure, 0 on success
  */
-int table_add_column (table *t, column *c) may_fail;
+int table_add_column (table *t, column *c) __may_fail;

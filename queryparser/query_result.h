@@ -52,7 +52,7 @@ typedef struct query_result query_result;
  * returns:
  *   a pointer to a query_result on success, NULL otherwise
  */
-query_result *query_result_create(void) may_fail;
+query_result *query_result_create(void) __may_fail;
 
 /* destroy a query_result and free all associated memory
  *
@@ -84,7 +84,7 @@ void query_result_set_width(query_result *r, unsigned int width);
  * returns:
  *   -1 on failure, 0 on success
  */
-int query_result_push(query_result *r, const char *item) may_fail;
+int query_result_push(query_result *r, const char *item) __may_fail;
 
 /* print a completed query_result nicely formatted to stdout
  *
@@ -98,5 +98,5 @@ int query_result_push(query_result *r, const char *item) may_fail;
  * returns:
  *   -1 on failure, 0 on success
  */
-int query_result_print(const query_result *r) may_fail;
+int query_result_print(const query_result *r) __may_fail;
 

@@ -55,7 +55,7 @@ typedef struct column column;
  * returns:
  *   a pointer to a column on success, NULL on failure
  */
-column *column_create (const char *name, datatype type, int width) may_fail;
+column *column_create (const char *name, datatype type, int width) __may_fail;
 
 /* destroy a column via the pointer returned by column_create
  *

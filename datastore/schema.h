@@ -48,7 +48,7 @@ typedef struct schema schema;
  * returns:
  *   a pointer to a schema on success, NULL otherwise
  */
-schema *schema_create(const char *name) may_fail;
+schema *schema_create(const char *name) __may_fail;
 
 /* destroy a schema that was created using schema_create
  *
@@ -94,7 +94,7 @@ table *schema_get_table_by_name(schema *s, const char *name);
  * returns:
  *   -1 on failure, 0 on success
  */
-int schema_add_table (schema *s, table *t) may_fail;
+int schema_add_table (schema *s, table *t) __may_fail;
 
 /* remove a table from the given schema, if found, and destroy the table
  * instance
