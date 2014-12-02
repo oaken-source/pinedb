@@ -2,18 +2,24 @@
 ## process this file with automake to produce Makefile.in
 
 EXTRA_DIST =  asparagus.exp \
-              lib/feedback.tcl lib/string.tcl \
-              steps/dispatcher.tcl steps/default.tcl \
+              lib/feedback.tcl lib/globals.tcl lib/string.tcl \
+              steps/dispatcher.tcl steps/default.tcl steps/custom.tcl \
 	      test.sql \
-	      pinedb-cli.tests/cli.exp \
-	      pinedb-schema.tests/create.exp \
-	      pinedb-schema.tests/drop.exp \
-	      pinedb-schema.tests/show.exp \
-	      pinedb-schema.tests/use.exp \
-	      pinedb-table.tests/create.exp \
-	      pinedb-table.tests/drop.exp \
-	      pinedb-table.tests/show.exp
+	      pinedb.tests/cli.exp \
+	      pinedb.tests/schema.exp \
+	      pinedb.tests/table.exp \
+	      leakcheck.tests/leakcheck.exp
 
 AUTOMAKE_OPTIONS = dejagnu
 
+DEJAGNU  = $(top_srcdir)/tests/asparagus.exp
+DEJATOOL = pinedb
+
 export DEJAGNU
+
+if PROFILING
+
+DEJATOOL += leakcheck
+
+endif ## PROFILING
+

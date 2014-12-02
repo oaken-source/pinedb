@@ -1,0 +1,558 @@
+
+### test for schema creation
+# simple create schema statements should create a schema of the given name
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "testschema"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same thing should happen if the `if not exists` qualifier is used
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema if not exists testschema;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "testschema"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same thing should happen if the schema name is quoted using backticks
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema `testschema`;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "testschema"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same thing should happen if `database` is used instead of `schema`
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create database testschema;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "testschema"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should be case insensitive
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "CREATE SCHEMA testschema;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "testschema"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+
+### test for schema creation using weird names
+# the query should succeed for the valid character set without backticks
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema abcxyzABCXYZ012_$;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "abcxyzABCXYZ012_\\\$"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should fail if invalid characters are used
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test:schema;\r"
+  then I should see "error: syntax error"
+  when I send "show schemata;\r\x04"
+  then I should see "ok: returned 0 rows"
+  and it should return 0
+# when the name is quoted using backticks, the query should succeed
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema `test:schema`;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "test:schema"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+
+### test for schema creation on alreday existing schemata
+# the query should fail if a schema of the same name already exists
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create schema test;\r"
+  then I should see "error: schema `test`: already exists"
+  when I send "show schemata;\r\x04"
+  then I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should fail if the schema name is quoted in backticks
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create schema `test`;\r"
+  then I should see "error: schema `test`: already exists"
+  when I send "show schemata;\r\x04"
+  then I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should succeed if the name differs in case
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create schema TEST;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "ok: returned 2 rows"
+  and it should return 0
+# the query should succeed if the `if not exists` qualifier is used
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create schema if not exists test;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "ok: returned 1 rows"
+  and it should return 0
+
+### test for the creation of multiple schemata
+# try to create 10 schemata
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 1 rows"
+  when I send "create schema test2;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 2 rows"
+  when I send "create schema test3;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 3 rows"
+  when I send "create schema test4;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 4 rows"
+  when I send "create schema test5;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 5 rows"
+  when I send "create schema test6;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 6 rows"
+  when I send "create schema test7;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 7 rows"
+  when I send "create schema test8;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 8 rows"
+  when I send "create schema test9;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 9 rows"
+  when I send "create schema test10;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "ok: returned 10 rows"
+  and it should return 0
+
+### test for schema dropping
+# simple drop schema statements should drop a schema of the given name
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema1;\r"
+  then I should see "ok"
+  when I send "create schema testschema2;\r"
+  then I should see "ok"
+  when I send "drop schema testschema1;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "testschema2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same thing should happen if the other schema is dropped
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema1;\r"
+  then I should see "ok"
+  when I send "create schema testschema2;\r"
+  then I should see "ok"
+  when I send "drop schema testschema2;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "testschema1"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same thing should happen if the schema is quoted using backticks
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema1;\r"
+  then I should see "ok"
+  when I send "create schema testschema2;\r"
+  then I should see "ok"
+  when I send "drop schema `testschema1`;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "testschema2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same thing should happen if the `if exists` qualifier is used
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema1;\r"
+  then I should see "ok"
+  when I send "create schema testschema2;\r"
+  then I should see "ok"
+  when I send "drop schema if exists testschema1;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "testschema2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same thing should happen if `database` is used instead of `schema`
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema1;\r"
+  then I should see "ok"
+  when I send "create schema testschema2;\r"
+  then I should see "ok"
+  when I send "drop database testschema1;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "testschema2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should not be case sensitive
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema1;\r"
+  then I should see "ok"
+  when I send "create schema testschema2;\r"
+  then I should see "ok"
+  when I send "DROP SCHEMA testschema1;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "testschema2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+
+### test for schema dropping using weird names
+# the query should succeed for the valid character set without backticks
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema abcxyzABCXYZ012_\$1;\r"
+  then I should see "ok"
+  when I send "create schema abcxyzABCXYZ012_\$2;\r"
+  then I should see "ok"
+  when I send "drop schema abcxyzABCXYZ012_\$1;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "abcxyzABCXYZ012_\\\$2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should fail if invalid characters are used
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema `test:schema1`;\r"
+  then I should see "ok"
+  when I send "create schema `test:schema2`;\r"
+  then I should see "ok"
+  when I send "drop schema test:schema1;\r"
+  then I should see "error: syntax error"
+  when I send "show schemata;\r\x04"
+  then I should see "ok: returned 2 rows"
+  and it should return 0
+# when the name is quoted using backticks, the query should succeed
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema `test:schema1`;\r"
+  then I should see "ok"
+  when I send "create schema `test:schema2`;\r"
+  then I should see "ok"
+  when I send "drop schema `test:schema1`;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "test:schema2"
+  then I should see "ok: returned 1 rows"
+  and it should return 0
+
+### test for schema dropping on nonexisting schemata
+# the query should fail if a schema of the given name does not exist
+given an executable "../pinedb/pinedb"
+  when I run
+  when I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "drop schema test2;\r"
+  then I should see "error: schema `test2`: does not exist"
+  when I send "show schemata;\r\x04"
+  then I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should fail if the schema name is quoted in backticks
+given an executable "../pinedb/pinedb"
+  when I run
+  when I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "drop schema `test2`;\r"
+  then I should see "error: schema `test2`: does not exist"
+  when I send "show schemata;\r\x04"
+  then I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should fail if the name differs only in case
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "drop schema TEST;\r"
+  then I should see "error: schema `TEST`: does not exist"
+  when I send "show schemata;\r\x04"
+  then I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should succeed if the `if exists` qualifier is used
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "drop schema if exists test2;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "ok: returned 1 rows"
+  and it should return 0
+
+### test for the dropping of multiple schemata
+# try to create 10 schemata
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 1 rows"
+  when I send "create schema test2;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 2 rows"
+  when I send "create schema test3;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 3 rows"
+  when I send "create schema test4;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 4 rows"
+  when I send "create schema test5;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 5 rows"
+  when I send "create schema test6;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 6 rows"
+  when I send "create schema test7;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 7 rows"
+  when I send "create schema test8;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 8 rows"
+  when I send "create schema test9;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 9 rows"
+  when I send "create schema test10;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 10 rows"
+  when I send "drop schema test1;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 9 rows"
+  when I send "drop schema test2;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 8 rows"
+  when I send "drop schema test3;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 7 rows"
+  when I send "drop schema test4;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 6 rows"
+  when I send "drop schema test5;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 5 rows"
+  when I send "drop schema test6;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 4 rows"
+  when I send "drop schema test7;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 3 rows"
+  when I send "drop schema test8;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 2 rows"
+  when I send "drop schema test9;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "ok: returned 1 rows"
+  when I send "drop schema test10;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "ok: returned 0 rows"
+  and it should return 0
+
+### test for output formatting of show schemata query
+# the show schemata query should return one line per schema
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "create schema test2;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "test1"
+  and I should see "test2"
+  and I should see "ok: returned 2 rows"
+  and it should return 0
+# the same thing should happen if `databases` is used instead of `schemata`
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "create schema test2;\r"
+  then I should see "ok"
+  when I send "show databases;\r\x04"
+  then I should see "test1"
+  and I should see "test2"
+  and I should see "ok: returned 2 rows"
+  and it should return 0
+# if no schemata are present, the query should succeed with an empty result set
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "show schemata;\r\x04"
+  then I should see "ok: returned 0 rows"
+  and it should return 0
+# the query should be case insensitive
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "SHOW SCHEMATA;\r\x04"
+  then I should see "ok: returned 0 rows"
+  and it should return 0
+# the output should be a nice table
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "show schemata;\r"
+  then I should see "+----------+"
+  and I should see  "| database |"
+  and I should see  "|----------|"
+  and I should see  "+----------+"
+  and I should see  "ok: returned 0 rows"
+  when I send "create schema short;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "+----------+"
+  and I should see  "| database |"
+  and I should see  "|----------|"
+  and I should see  "|    short |"
+  and I should see  "+----------+"
+  and I should see  "ok: returned 1 rows"
+  when I send "create schema veryveryveryveryveryverylong;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "+------------------------------+"
+  and I should see  "|                     database |"
+  and I should see  "|------------------------------|"
+  and I should see  "|                        short |"
+  and I should see  "| veryveryveryveryveryverylong |"
+  and I should see  "+------------------------------+"
+  and I should see  "ok: returned 2 rows"
+  and it should return 0
+
+### test for schema using
+# simple use schema queries should set the current schema
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "use testschema;\r\x04"
+  then I should see "ok"
+  and it should return 0
+# it should do the same if the schema name is quoted using backticks
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "use `testschema`;\r\x04"
+  then I should see "ok"
+  and it should return 0
+# the query should be case insensitive
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "USE testschema;\r\x04"
+  then I should see "ok"
+  and it should return 0
+
+### test for query using with weird names
+# the query should succeed for the valid character set without quoting
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema abcxyzABCXYZ012_$;\r"
+  then I should see "ok"
+  when I send "use abcxyzABCXYZ012_$;\r\x04"
+  then I should see "ok"
+  and it should return 0
+# the query should fail if invalid characters are used
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema `test:schema`;\r"
+  then I should see "ok"
+  when I send "use test:schema;\r\x04"
+  then I should see "error: syntax error"
+  and it should return 0
+# the query should succeed if the invalid identifier is quoted using backticks
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema `test:schema`;\r"
+  then I should see "ok"
+  when I send "use `test:schema`;\r\x04"
+  then I should see "ok"
+  and it should return 0
+
+### test for query using with nonexistant schemata
+# the query should fail if a non existant schema is used
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "use test2;\r\x04"
+  then I should see "error: schema `test2`: does not exist"
+  and it should return 0
+# it should also fail if the schema is quoted using backticks
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "use `test2`;\r\x04"
+  then I should see "error: schema `test2`: does not exist"
+  and it should return 0
+# it should also fail if the schemata differ only in case
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "use TEST;\r\x04"
+  then I should see "error: schema `TEST`: does not exist"
+  and it should return 0
+
+send_user "\n"

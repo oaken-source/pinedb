@@ -1,6 +1,5 @@
 
 ### tests for --quiet / -q option
-set test_name "tests for --quiet / -q option"
 # -q / --quiet should be accepted
 given an executable "../pinedb/pinedb"
   when I run with parameters "$srcdir/test.sql --quiet"
@@ -10,7 +9,6 @@ given an executable "../pinedb/pinedb"
 # other than that, they do nothing yet
 
 ### test for --help / -? option
-set test_name "test for --help / -? option"
 # --help / -h should be accepted
 given an executable "../pinedb/pinedb"
   when I run with parameters "$srcdir/test.sql --help"
@@ -27,7 +25,6 @@ given an executable "../pinedb/pinedb"
   and it should return 0
 
 ### test for --usage option
-set test_name "test for --usage option"
 # --usage should be accepted
 given an executable "../pinedb/pinedb"
   when I run with parameters "$srcdir/test.sql --usage"
@@ -44,7 +41,6 @@ given an executable "../pinedb/pinedb"
   and it should return 0
 
 ### test for --version / -V option
-set test_name "test for --version / -V option"
 # --version / -V should be accepted
 given an executable "../pinedb/pinedb"
   when I run with parameters "$srcdir/test.sql --version"
@@ -61,7 +57,6 @@ given an executable "../pinedb/pinedb"
   and it should return 0
 
 ### test for -W flag family
-set test_name "test for -W flag family"
 # -Wall should be accepted
 given an executable "../pinedb/pinedb"
   when I run with parameters "$srcdir/test.sql -Wall"
@@ -73,7 +68,6 @@ given an executable "../pinedb/pinedb"
   and it should not return 0
 
 ### test for prompt formatting
-set test_name "test for prompt formatting"
 # stdin mode should prompt the user with `>`
 given an executable "../pinedb/pinedb"
   when I run
@@ -90,7 +84,6 @@ given an executable "../pinedb/pinedb"
   and it should return 0
 
 ### test for input handling
-set test_name "test for input handling"
 # the program should terminate on EOF
 given an executable "../pinedb/pinedb"
   when I run

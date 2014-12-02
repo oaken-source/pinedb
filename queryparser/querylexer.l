@@ -84,6 +84,13 @@ in                  { common_setup; return IN; }
 
 #undef common_setup
 
+static void
+__attribute__((constructor))
+querylexer_init (void)
+{
+  rl_initialize();
+}
+
 void
 querylexer_restart (void)
 {

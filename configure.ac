@@ -13,6 +13,7 @@ AC_SUBST([AM_CFLAGS], [])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 AC_PROG_CC
+AM_PROG_CC_C_O
 AM_PROG_AR
 AM_PROG_LEX
 AC_PROG_YACC
@@ -20,20 +21,10 @@ AC_PROG_YACC
 AX_ALLOW_DEBUG_MESSAGES
 AX_ALLOW_PROFILING
 
-if test x"$DEJAGNU" = x; then
-  DEJAGNU="\$(top_srcdir)/tests/asparagus.exp"
-fi
-AC_SUBST(DEJAGNU)
-
 LT_INIT
 
 AC_CONFIG_FILES([
   Makefile
-  grapes/Makefile
-  queryparser/Makefile
-  datastore/Makefile
-  pinedb/Makefile
-  tests/Makefile
-  leakcheck/Makefile])
+  tests/Makefile])
 
 AC_OUTPUT

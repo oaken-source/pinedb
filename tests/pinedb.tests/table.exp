@@ -1,0 +1,916 @@
+
+### test for table creation
+# simple create table statements should create a table of the given name
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "create table testschema.testtable ( column int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "testtable"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same should happen if the table name is quoted using backticks
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "create table testschema.`testtable` ( column int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "testtable"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same should happen if the schema name is quoted using backticks
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "create table `testschema`.testtable ( column int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "testtable"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same should happen if the shema is used instead of passed as a qualifier
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "use testschema;\r"
+  when I send "create table testtable ( column int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "testtable"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same should happen if the table name is quoted using backticks
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "use testschema;\r"
+  when I send "create table `testtable` ( column int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "testtable"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same should happen if the `if not exists` qulifier is used
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "create table if not exists testschema.testtable ( column int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "testtable"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should be case insensitive
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "CREATE TABLE testschema.testtable ( column INT (11) );\r"
+  then I should see "ok"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "testtable"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+
+### test for table creation using weird names
+# the query should succeed if the valid character set is used (schema)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema abcxyzABCXYZ012_$;\r"
+  then I should see "ok"
+  when I send "create table abcxyzABCXYZ012_$.testtable ( column int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in abcxyzABCXYZ012_$;\r\x04"
+  then I should see "testtable"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should fail if invalid characters are used (schema)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema `test:schema`;\r"
+  then I should see "ok"
+  when I send "create table test:schema.testtable ( column int (11) );\r"
+  then I should see "error: syntax error"
+  when I send "show tables in `test:schema`;\r\x04"
+  then I should see "ok: returned 0 rows"
+  and it should return 0
+# the query should succeed if the name is quoted in backticks (schema)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema `test:schema`;\r"
+  then I should see "ok"
+  when I send "create table `test:schema`.testtable ( column int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in `test:schema`;\r\x04"
+  then I should see "testtable"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should succeed if the valid character set is used (table)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "create table testschema.abcxyzABCXYZ012_$ ( column int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "abcxyzABCXYZ012_\\\$"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should fail if invalid characters are used (table)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "create table testschema.test:table ( column int (11) );\r"
+  then I should see "error: syntax error"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "ok: returned 0 rows"
+  and it should return 0
+# the query should succeed if the name is quoted in backticks (table)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "create table testschema.`test:table` ( column int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "test:table"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should succeed if the valid character set is used (column)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "create table testschema.testtable ( abcxyzABCXYZ012_$ int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "testtable"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should fail if invalid characters are used (column)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "create table testschema.testtable ( test:column int (11) );\r"
+  then I should see "error: syntax error"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "ok: returned 0 rows"
+  and it should return 0
+# the query should succeed if the name is quoted in backticks (column)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "create table testschema.testtable ( `test:column` int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "testtable"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+
+### test for table creation on already existing tables
+# if a table of the same name already exists, the query should fail
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "create table testschema.testtable ( column int (11) );\r"
+  then I should see "ok"
+  when I send "create table testschema.testtable ( column int (11) );\r\x04"
+  then I should see "error: table `testtable`: already exists"
+  and it should return 0
+# the query should also fail if the name is quoted
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "create table testschema.testtable ( column int (11) );\r"
+  then I should see "ok"
+  when I send "create table testschema.`testtable` ( column int (11) );\r\x04"
+  then I should see "error: table `testtable`: already exists"
+  and it should return 0
+# the query should succeed if the name differs in case
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "create table testschema.testtable ( column int (11) );\r"
+  then I should see "ok"
+  when I send "create table testschema.TESTTABLE ( column int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "testtable"
+  and I should see "TESTTABLE"
+  and I should see "ok: returned 2 rows"
+  and it should return 0
+# the query should succeed if a table of the given name exists in a different schema
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema1;\r"
+  then I should see "ok"
+  when I send "create schema testschema2;\r"
+  then I should see "ok"
+  when I send "create table testschema1.testtable ( column int (11) );\r"
+  then I should see "ok"
+  when I send "create table testschema2.testtable ( column int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in testschema1;\r"
+  then I should see "ok: returned 1 rows"
+  when I send "show tables in testschema2;\r\x04"
+  then I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should succeed if the `if not exists` qualifier is used
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "create table testschema.testtable ( column int (11) );\r"
+  then I should see "ok"
+  when I send "create table if not exists testschema.testtable ( column int (11) );\r"
+  then I should see "ok"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "ok: returned 1 rows"
+  and it should return 0
+
+### test for column configurations
+# int should be an accepted datatype, where the length modifier is optional
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.test ( col1 int, col2 int(11) );\r\x04"
+  then I should see "ok"
+  and it should return 0
+# varchar should be an accepted datatype, where the length modifier is required
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.test1 ( col varchar(64) );\r"
+  then I should see "ok"
+  when I send "create table test.test2 ( col varchar );\r\x04"
+  then I should see "error: syntax error"
+  and it should return 0
+# non existing datatype definitions should produce an error
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.test ( col does_not_exist (64) );\r\x04"
+  then I should see "error: syntax error"
+  and it should return 0
+# empty column lists should produce an error
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.test ( );\r\x04"
+  then I should see "error: syntax error"
+  and it should return 0
+
+### test for create schema, use, drop schema interactions
+# when the used schema is dropped, an unqualified query should fail
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "use test;\r"
+  then I should see "ok"
+  when I send "create table test1 ( col int );\r"
+  then I should see "ok"
+  when I send "drop schema test;\r"
+  then I should see "ok"
+  when I send "create table test2 ( col int );\r\x04"
+  then I should see "error: no schema selected"
+  and it should return 0
+# when a schema containing tables is dropped, the tables should be gone
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "use test;\r"
+  then I should see "ok"
+  when I send "create table test1 ( col int );\r"
+  then I should see "ok"
+  when I send "drop schema test;\r"
+  then I should see "ok"
+  when I send "show tables in test;\r\x04"
+  then I should see "error: schema `test`: does not exist"
+  and it should return 0
+# when a schema containing tables is dropped, tables in other schemata stay
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "create schema test2;\r"
+  then I should see "ok"
+  when I send "create table test1.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table test2.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "drop schema test1;\r"
+  then I should see "ok"
+  when I send "show tables in test2;\r\x04"
+  then I should see "testtable2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# tables should be created in the right schemata
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "create schema test2;\r"
+  then I should see "ok"
+  when I send "create schema test3;\r"
+  then I should see "ok"
+  when I send "create table test1 ( col int );\r"
+  then I should see "error: no schema selected"
+  when I send "create table test1.test1 (col int );\r"
+  then I should see "ok"
+  when I send "use test2;\r"
+  then I should see "ok"
+  when I send "create table test2 ( col int );\r"
+  then I should see "ok"
+  when I send "create table test3.test3 ( col int );\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "test1"
+  and I should see "test2"
+  and I should see "test3"
+  and I should see "ok: returned 3 rows"
+  when I send "drop schema test1;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "test2"
+  and I should see "test3"
+  and I should see "ok: returned 2 rows"
+  when I send "drop schema test2;\r"
+  then I should see "ok"
+  when I send "show schemata;\r"
+  then I should see "test3"
+  and I should see "ok: returned 1 rows"
+  when I send "drop schema test3;\r"
+  then I should see "ok"
+  when I send "show schemata;\r\x04"
+  then I should see "ok: returned 0 rows"
+  and it should return 0
+
+### test for multiple table creation
+# try to create 10 tables in 2 schemata
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema schema1;\r"
+  then I should see "ok"
+  when I send "create schema schema2;\r"
+  then I should see "ok"
+  when I send "create table schema1.table1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema1.table2 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema1.table3 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema2.table4 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema2.table5 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema2.table6 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema2.table7 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema2.table8 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema2.table9 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema2.table10 ( col int );\r"
+  then I should see "ok"
+  when I send "show tables in schema1;\r"
+  then I should see "table1"
+  and I should see "table2"
+  and I should see "table3"
+  and I should see "ok: returned 3 rows"
+  when I send "show tables in schema2;\r\x04"
+  then I should see "table4"
+  and I should see "table5"
+  and I should see "table6"
+  and I should see "table7"
+  and I should see "table8"
+  and I should see "table9"
+  and I should see "table10"
+  and I should see "ok: returned 7 rows"
+  and it should return 0
+
+### test for simple schema dropping
+# simple drop table statements should drop the table of the given name
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table test.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table test.testtable1;\r"
+  then I should see "ok"
+  when I send "show tables in test;\r\x04"
+  then I should see "testtable2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same should happen if the other table is dropped
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table test.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table test.testtable2;\r"
+  then I should see "ok"
+  when I send "show tables in test;\r\x04"
+  then I should see "testtable1"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same should happen if the schema name is quoted using backticks
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table test.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table `test`.testtable1;\r"
+  then I should see "ok"
+  when I send "show tables in test;\r\x04"
+  then I should see "testtable2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same should happen if the table name is quoted using backticks
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table test.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table test.`testtable1`;\r"
+  then I should see "ok"
+  when I send "show tables in test;\r\x04"
+  then I should see "testtable2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same thing should happen if the `if exists` qualifier is used
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table test.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table if exists test.testtable1;\r"
+  then I should see "ok"
+  when I send "show tables in test;\r\x04"
+  then I should see "testtable2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same thing should happen if a use schema statement is in effect
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table test.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "use test;\r"
+  then I should see "ok"
+  when I send "drop table testtable1;\r"
+  then I should see "ok"
+  when I send "show tables in test;\r\x04"
+  then I should see "testtable2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should be case insensitive
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table test.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "DROP TABLE test.testtable1;\r"
+  then I should see "ok"
+  when I send "show tables in test;\r\x04"
+  then I should see "testtable2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+
+### test for table dropping using weird names
+# the query should succeed if the valid charset is used (schema)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema abcxyzABCXYZ012_$;\r"
+  then I should see "ok"
+  when I send "create table abcxyzABCXYZ012_$.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table abcxyzABCXYZ012_$.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table abcxyzABCXYZ012_$.testtable1;\r"
+  then I should see "ok"
+  when I send "show tables in abcxyzABCXYZ012_$;\r\x04"
+  then I should see "testtable2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should fail if invalid characters are used (schema)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema `test:schema`;\r"
+  then I should see "ok"
+  when I send "create table `test:schema`.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table `test:schema`.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table test:schema.testtable1;\r"
+  then I should see "error: syntax error"
+  when I send "show tables in `test:schema`;\r\x04"
+  then I should see "testtable1"
+  and I should see "testtable2"
+  and I should see "ok: returned 2 rows"
+  and it should return 0
+# the query should succeed if the identifier is quoted (schema)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema `test:schema`;\r"
+  then I should see "ok"
+  when I send "create table `test:schema`.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table `test:schema`.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table `test:schema`.testtable1;\r"
+  then I should see "ok"
+  when I send "show tables in `test:schema`;\r\x04"
+  then I should see "testtable2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should succeed if the valid charset is used (table)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.abcxyzABCXYZ012_\$1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table test.abcxyzABCXYZ012_\$2 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table test.abcxyzABCXYZ012_\$1;\r"
+  then I should see "ok"
+  when I send "show tables in test;\r\x04"
+  then I should see "abcxyzABCXYZ012_\\\$2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should fail if invalid characters are used (table)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.`test:table1` ( col int );\r"
+  then I should see "ok"
+  when I send "create table test.`test:table2` ( col int );\r"
+  then I should see "ok"
+  when I send "drop table test.test:table1;\r"
+  then I should see "error: syntax error"
+  when I send "show tables in test;\r\x04"
+  then I should see "test:table1"
+  and I should see "test:table2"
+  and I should see "ok: returned 2 rows"
+  and it should return 0
+# the query should succeed if the identifier is quoted (table)
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.`test:table1` ( col int );\r"
+  then I should see "ok"
+  when I send "create table test.`test:table2` ( col int );\r"
+  then I should see "ok"
+  when I send "drop table test.`test:table1`;\r"
+  then I should see "ok"
+  when I send "show tables in test;\r\x04"
+  then I should see "test:table2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+
+### test for table dropping on nonexistant tables
+# the query should fail if a table of the given name does not exist
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table test.testtable2;\r"
+  then I should see "error: table `testtable2`: does not exist"
+  when I send "show tables in test;\r\x04"
+  then I should see "testtable1"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same should happen if the table name is quoted
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table test.`testtable2`;\r"
+  then I should see "error: table `testtable2`: does not exist"
+  when I send "show tables in test;\r\x04"
+  then I should see "testtable1"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should fail if a schema of the given name does not exist
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "create table test1.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table test2.testtable1;\r"
+  then I should see "error: schema `test2`: does not exist"
+  when I send "show tables in test1;\r\x04"
+  then I should see "testtable1"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same should happen if the schema name is quoted
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test1;\r"
+  then I should see "ok"
+  when I send "create table test1.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table `test2`.testtable1;\r"
+  then I should see "error: schema `test2`: does not exist"
+  when I send "show tables in test1;\r\x04"
+  then I should see "testtable1"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should fail if the name differs only in case
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table test.TESTTABLE1;\r"
+  then I should see "error: table `TESTTABLE1`: does not exist"
+  when I send "show tables in test;\r\x04"
+  then I should see "testtable1"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the query should succeed if the `if exists` qualifier is used
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "create table test.testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "drop table if exists test.testtable2;\r"
+  then I should see "ok"
+  when I send "drop table if exists test1.testtable1;\r"
+  then I should see "ok"
+  when I send "show tables in test;\r\x04"
+  then I should see "testtable1"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+
+### test for the dropping of multiple tables
+# try to create 10 tables in 2 schemata and drop them
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema schema1;\r"
+  then I should see "ok"
+  when I send "create schema schema2;\r"
+  then I should see "ok"
+  when I send "create table schema1.table1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema1.table2 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema1.table3 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema2.table4 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema2.table5 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema2.table6 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema2.table7 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema2.table8 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema2.table9 ( col int );\r"
+  then I should see "ok"
+  when I send "create table schema2.table10 ( col int );\r"
+  then I should see "ok"
+  when I send "show tables in schema1;\r"
+  then I should see "table1"
+  and I should see "table2"
+  and I should see "table3"
+  and I should see "ok: returned 3 rows"
+  when I send "show tables in schema2;\r"
+  then I should see "table4"
+  and I should see "table5"
+  and I should see "table6"
+  and I should see "table7"
+  and I should see "table8"
+  and I should see "table9"
+  and I should see "table10"
+  and I should see "ok: returned 7 rows"
+  when I send "drop table schema1.table1;\r"
+  then I should see "ok"
+  when I send "drop table schema1.table2;\r"
+  then I should see "ok"
+  when I send "drop table schema1.table3;\r"
+  then I should see "ok"
+  when I send "drop table schema2.table4;\r"
+  then I should see "ok"
+  when I send "drop table schema2.table5;\r"
+  then I should see "ok"
+  when I send "drop table schema2.table6;\r"
+  then I should see "ok"
+  when I send "drop table schema2.table7;\r"
+  then I should see "ok"
+  when I send "drop table schema2.table8;\r"
+  then I should see "ok"
+  when I send "drop table schema2.table9;\r"
+  then I should see "ok"
+  when I send "drop table schema2.table10;\r"
+  then I should see "ok"
+  when I send "show tables in schema1;\r"
+  then I should see "ok: returned 0 rows"
+  when I send "show tables in schema2;\r\x04"
+  then I should see "ok: returned 0 rows"
+  and it should return 0
+
+### test for output formatting of show table queries
+# the show tables query should return one line per table in the current schema
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "use testschema;\r"
+  then I should see "ok"
+  when I send "create table testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "show tables;\r\x04"
+  then I should see "testtable1"
+  and I should see "testtable2"
+  and I should see "ok: returned 2 rows"
+  and it should return 0
+# the table should be case insensitive
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "use testschema;\r"
+  then I should see "ok"
+  when I send "create table testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "SHOW TABLES;\r\x04"
+  then I should see "testtable1"
+  and I should see "testtable2"
+  and I should see "ok: returned 2 rows"
+  and it should return 0
+# tables in foreign schemata should not be listed
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema1;\r"
+  then I should see "ok"
+  when I send "create schema testschema2;\r"
+  then I should see "ok"
+  when I send "use testschema1;\r"
+  then I should see "ok"
+  when I send "create table testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table testschema2.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "show tables;\r\x04"
+  then I should see "testtable1"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# a foreign schema should be selectable using the `from` keyword
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema1;\r"
+  then I should see "ok"
+  when I send "create schema testschema2;\r"
+  then I should see "ok"
+  when I send "use testschema1;\r"
+  then I should see "ok"
+  when I send "create table testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table testschema2.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "show tables from testschema2;\r\x04"
+  then I should see "testtable2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same should happen if the `in` keyword is used instead
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema1;\r"
+  then I should see "ok"
+  when I send "create schema testschema2;\r"
+  then I should see "ok"
+  when I send "use testschema1;\r"
+  then I should see "ok"
+  when I send "create table testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table testschema2.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "show tables in testschema2;\r\x04"
+  then I should see "testtable2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# the same thing should happen if the schema name is quoted
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema1;\r"
+  then I should see "ok"
+  when I send "create schema testschema2;\r"
+  then I should see "ok"
+  when I send "use testschema1;\r"
+  then I should see "ok"
+  when I send "create table testtable1 ( col int );\r"
+  then I should see "ok"
+  when I send "create table testschema2.testtable2 ( col int );\r"
+  then I should see "ok"
+  when I send "show tables from `testschema2`;\r\x04"
+  then I should see "testtable2"
+  and I should see "ok: returned 1 rows"
+  and it should return 0
+# if no tables are present, the query should return an empty result
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "show tables in test;\r\x04"
+  then I should see "ok: returned 0 rows"
+  and it should return 0
+# if the given schema is not present, the query should fail
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema test;\r"
+  then I should see "ok"
+  when I send "show tables in testschema;\r\x04"
+  then I should see "error: schema `testschema`: does not exist"
+  and it should return 0
+# the output should be a nice table
+given an executable "../pinedb/pinedb"
+  when I run
+  and I send "create schema testschema;\r"
+  then I should see "ok"
+  when I send "use testschema;\r"
+  then I should see "ok"
+  when I send "show tables;\r"
+  then I should see "+-------+"
+  and I should see  "| table |"
+  and I should see  "|-------|"
+  and I should see  "+-------+"
+  and I should see  "ok: returned 0 rows"
+  when I send "create table short ( col int );\r"
+  then I should see "ok"
+  when I send "show tables;\r"
+  then I should see "+-------+"
+  and I should see  "| table |"
+  and I should see  "|-------|"
+  and I should see  "| short |"
+  and I should see  "+-------+"
+  and I should see  "ok: returned 1 rows"
+  when I send "create table veryveryveryveryveryverylong ( col int );\r"
+  then I should see "ok"
+  when I send "show tables;\r\x04"
+  then I should see "+------------------------------+"
+  and I should see  "|                        table |"
+  and I should see  "|------------------------------|"
+  and I should see  "|                        short |"
+  and I should see  "| veryveryveryveryveryverylong |"
+  and I should see  "+------------------------------+"
+  and I should see  "ok: returned 2 rows"
+  and it should return 0
+
+send_user "\n"
