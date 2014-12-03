@@ -21,17 +21,23 @@
 
 #pragma once
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
 
 #include "globals.h"
 
 #include "queryparser/parser.h"
 
 #include <grapes/feedback.h>
+#include <grapes/vector.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <argp.h>
+
+
+vector_declare(vec_files, const char*);
 
 const char *argp_program_version = PACKAGE_STRING;
 const char *argp_program_bug_address = PACKAGE_BUGREPORT;
@@ -49,8 +55,7 @@ static struct argp_option options[] =
 
 struct arguments
 {
-  const char **files;
-  unsigned int nfiles;
+  vec_files files;
 
   unsigned int werror;
   unsigned int wflags;
@@ -98,10 +103,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
 
       break;
     case ARGP_KEY_ARG:
-      ++(args->nfiles);
-      args->files = realloc(args->files, sizeof(*(args->files)) * args->nfiles);
-      assert_inner(args->files, "realloc");
-      args->files[args->nfiles - 1] = arg;
+      __checked_call(0 == vector_push(&(args->files), arg));
       break;
     case ARGP_KEY_END:
       break;
@@ -112,8 +114,8 @@ parse_opt (int key, char *arg, struct argp_state *state)
   return 0;
 }
 
-#undef check_single_warning_flag
-#undef check_collection_warning_flag
+#undef  check_single_warning_flag
+#undef  check_collection_warning_flag
 
 static struct argp argp = { options, parse_opt, args_doc, doc, 0, 0, 0 };
 

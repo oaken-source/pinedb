@@ -26,13 +26,15 @@
 #include "table.h"
 
 #include <grapes/util.h>
+#include <grapes/vector.h>
+
+vector_declare(vec_tables, table*);
 
 struct schema
 {
   char *name;
 
-  table **tables;
-  unsigned int ntables;
+  vec_tables tables;
 };
 typedef struct schema schema;
 

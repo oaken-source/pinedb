@@ -20,30 +20,28 @@
 
 #include "datastore.h"
 
+#include <grapes/vector.h>
+
 #include <string.h>
 
-struct datastore
-{
-  schema **schemata;
-  unsigned int nschemata;
-};
+vector_declare(vec_schemata, schema*);
 
-struct datastore datastore = { NULL, 0 };
+vec_schemata schemata = { 0 };
 
 schema**
 datastore_get_schemata (unsigned int *nschemata)
 {
-  *nschemata = datastore.nschemata;
-  return datastore.schemata;
+  *nschemata = schemata.nitems;
+  return schemata.items;
 }
 
 schema*
 datastore_get_schema_by_name (const char *name)
 {
-  unsigned int i;
-  for (i = 0; i < datastore.nschemata; ++i)
-    if (!strcmp(datastore.schemata[i]->name, name))
-      return datastore.schemata[i];
+  vector_map(&schemata, ITEM,
+    if (!strcmp(ITEM->name, name))
+      return ITEM;
+  );
 
   return NULL;
 }
@@ -51,12 +49,7 @@ datastore_get_schema_by_name (const char *name)
 int
 datastore_add_schema (schema *s)
 {
-  ++(datastore.nschemata);
-  void *new = realloc(datastore.schemata, sizeof(*(datastore.schemata)) * datastore.nschemata);
-  assert_inner(new, "realloc");
-
-  datastore.schemata = new;
-  datastore.schemata[datastore.nschemata - 1] = s;
+  __checked_call(0 == vector_push(&schemata, s));
 
   return 0;
 }
@@ -65,13 +58,13 @@ void
 datastore_remove_schema (schema *s)
 {
   unsigned int i;
-  for (i = 0; i < datastore.nschemata; ++i)
-    if (datastore.schemata[i] == s)
+  for (i = 0; i < schemata.nitems; ++i)
+    if (schemata.items[i] == s)
       break;
-  for (++i; i < datastore.nschemata; ++i)
-    datastore.schemata[i - 1] = datastore.schemata[i];
+  for (++i; i < schemata.nitems; ++i)
+    schemata.items[i - 1] = schemata.items[i];
 
-  --(datastore.nschemata);
+  --(schemata.nitems);
   schema_destroy(s);
 }
 
@@ -79,8 +72,8 @@ static void
 __attribute__((destructor))
 datastore_fini (void)
 {
-  unsigned int i;
-  for (i = 0; i < datastore.nschemata; ++i)
-    schema_destroy(datastore.schemata[i]);
-  free(datastore.schemata);
+  vector_map(&schemata, ITEM,
+    schema_destroy(ITEM);
+  );
+  vector_clear(&schemata);
 }

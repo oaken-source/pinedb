@@ -21,7 +21,10 @@
 
 #pragma once
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 
 extern unsigned int global_werror;
 extern unsigned int global_wflags;

@@ -21,18 +21,22 @@
 
 #pragma once
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
 
 #include "column.h"
 
 #include <grapes/util.h>
+#include <grapes/vector.h>
+
+vector_declare(vec_columns, column*);
 
 struct table
 {
   char *name;
 
-  column **columns;
-  unsigned int ncolumns;
+  vec_columns columns;
 };
 typedef struct table table;
 

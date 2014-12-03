@@ -37,8 +37,7 @@ table_create (const char *name)
       assert_inner_ptr(0, "strdup");
     }
 
-  t->columns = NULL;
-  t->ncolumns = 0;
+  vector_init(&(t->columns));
 
   return t;
 }
@@ -46,10 +45,10 @@ table_create (const char *name)
 void
 table_destroy (table *t)
 {
-  unsigned int i;
-  for (i = 0; i < t->ncolumns; ++i)
-    column_destroy(t->columns[i]);
-  free(t->columns);
+  vector_map(&(t->columns), ITEM,
+    column_destroy(ITEM);
+  );
+  vector_clear(&(t->columns));
 
   free(t->name);
   free(t);
@@ -58,10 +57,10 @@ table_destroy (table *t)
 column*
 table_get_column_by_name (table *t, const char *name)
 {
-  unsigned int i;
-  for (i = 0; i < t->ncolumns; ++i)
-    if (!strcmp(t->columns[i]->name, name))
-      return t->columns[i];
+  vector_map(&(t->columns), ITEM,
+    if (!strcmp(ITEM->name, name))
+      return ITEM;
+  );
 
   return NULL;
 }
@@ -69,12 +68,7 @@ table_get_column_by_name (table *t, const char *name)
 int
 table_add_column (table *t, column *c)
 {
-  ++(t->ncolumns);
-  void *new = realloc(t->columns, sizeof(*(t->columns)) * t->ncolumns);
-  assert_inner(new, "realloc");
-
-  t->columns = new;
-  t->columns[t->ncolumns - 1] = c;
+  __checked_call(0 == vector_push(&(t->columns), c));
 
   return 0;
 }

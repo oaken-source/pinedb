@@ -36,8 +36,7 @@ schema_create (const char *name)
       assert_inner_ptr(0, "strdup");
     }
 
-  s->tables = NULL;
-  s->ntables = 0;
+  vector_init(&(s->tables));
 
   return s;
 }
@@ -45,10 +44,10 @@ schema_create (const char *name)
 void
 schema_destroy (schema *s)
 {
-  unsigned int i;
-  for (i = 0; i < s->ntables; ++i)
-    table_destroy(s->tables[i]);
-  free(s->tables);
+  vector_map(&(s->tables), ITEM,
+    table_destroy(ITEM);
+  );
+  vector_clear(&(s->tables));
 
   free(s->name);
   free(s);
@@ -57,17 +56,17 @@ schema_destroy (schema *s)
 table**
 schema_get_tables (schema *s, unsigned int *ntables)
 {
-  *ntables = s->ntables;
-  return s->tables;
+  *ntables = s->tables.nitems;
+  return s->tables.items;
 }
 
 table*
 schema_get_table_by_name (schema *s, const char *name)
 {
-  unsigned int i;
-  for (i = 0; i < s->ntables; ++i)
-    if (!strcmp(s->tables[i]->name, name))
-      return s->tables[i];
+  vector_map(&(s->tables), ITEM,
+    if (!strcmp(ITEM->name, name))
+      return ITEM;
+  );
 
   return NULL;
 }
@@ -75,12 +74,7 @@ schema_get_table_by_name (schema *s, const char *name)
 int
 schema_add_table (schema *s, table *t)
 {
-  ++(s->ntables);
-  void *new = realloc(s->tables, sizeof(*(s->tables)) * s->ntables);
-  assert_inner(new, "realloc");
-
-  s->tables = new;
-  s->tables[s->ntables - 1] = t;
+  __checked_call(0 == vector_push(&(s->tables), t));
 
   return 0;
 }
@@ -89,12 +83,12 @@ void
 schema_remove_table (schema *s, table *t)
 {
   unsigned int i;
-  for (i = 0; i < s->ntables; ++i)
-    if (s->tables[i] == t)
+  for (i = 0; i < s->tables.nitems; ++i)
+    if (s->tables.items[i] == t)
       break;
-  for (++i; i < s->ntables; ++i)
-    s->tables[i - 1] = s->tables[i];
+  for (++i; i < s->tables.nitems; ++i)
+    s->tables.items[i - 1] = s->tables.items[i];
 
-  --(s->ntables);
+  --(s->tables.nitems);
   table_destroy(t);
 }

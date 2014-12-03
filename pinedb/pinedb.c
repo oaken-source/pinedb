@@ -30,7 +30,7 @@ int
 main (int argc, char *argv[])
 {
   // process cli arguments
-  struct arguments args = { NULL, 0, 0, QUERY_WRN_DEFAULT, 0 };
+  struct arguments args = { { 0 }, 0, QUERY_WRN_DEFAULT, 0 };
   argp_parse(&argp, argc, argv, 0, 0, &args);
 
   global_werror = args.werror;
@@ -38,7 +38,7 @@ main (int argc, char *argv[])
   global_quiet  = args.quiet;
 
   // parse queries from stdin if no files
-  if (!args.nfiles)
+  if (!args.files.nitems)
     {
       int res = queryparser_parse_from_stdin();
       feedback_assert(!res, "query processing failed.");
@@ -46,21 +46,21 @@ main (int argc, char *argv[])
 
   // parse queries from files otherwise
   unsigned int i;
-  for (i = 0; i < args.nfiles; ++i)
+  for (i = 0; i < args.files.nitems; ++i)
     {
       size_t length;
-      char *data = file_map(args.files[i], &length);
-      feedback_assert(data, "%s", args.files[i]);
+      char *data = file_map(args.files.items[i], &length);
+      feedback_assert(data, "%s", args.files.items[i]);
 
-      int res = queryparser_parse_from_file(args.files[i], data);
+      int res = queryparser_parse_from_file(args.files.items[i], data);
       feedback_assert(!res, "query processing failed.");
 
       res = file_unmap(data, length);
-      feedback_assert(!res, "%s", args.files[i]);
+      feedback_assert(!res, "%s", args.files.items[i]);
     }
 
   // cleanup
-  free(args.files);
+  vector_clear(&(args.files));
 
   return 0;
 }
