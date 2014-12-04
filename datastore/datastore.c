@@ -49,6 +49,8 @@ datastore_get_schema_by_name (const char *name)
 int
 datastore_add_schema (schema *s)
 {
+  __returns_int;
+
   __checked_call(0 == vector_push(&schemata, s));
 
   return 0;

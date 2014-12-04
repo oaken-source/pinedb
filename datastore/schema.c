@@ -26,15 +26,14 @@
 schema*
 schema_create (const char *name)
 {
-  schema *s = malloc(sizeof(*s));
-  assert_inner_ptr(s, "malloc");
+  __returns_ptr;
 
-  s->name = strdup(name);
-  if (!s->name)
-    {
-      free(s);
-      assert_inner_ptr(0, "strdup");
-    }
+  schema *s;
+
+  __checked_call(NULL != (s = malloc(sizeof(*s))));
+  __checked_call(NULL != (s->name = strdup(name)),
+    free(s);
+  );
 
   vector_init(&(s->tables));
 
@@ -44,6 +43,9 @@ schema_create (const char *name)
 void
 schema_destroy (schema *s)
 {
+  if (!s)
+    return;
+
   vector_map(&(s->tables), ITEM,
     table_destroy(ITEM);
   );
@@ -74,6 +76,8 @@ schema_get_table_by_name (schema *s, const char *name)
 int
 schema_add_table (schema *s, table *t)
 {
+  __returns_int;
+
   __checked_call(0 == vector_push(&(s->tables), t));
 
   return 0;

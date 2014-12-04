@@ -29,12 +29,15 @@
 query_result*
 query_result_create (void)
 {
-  query_result *r = malloc(sizeof(*r));
-  assert_inner_ptr(r, "malloc");
+  __returns_ptr;
+
+  query_result *r;
+
+  __checked_call(NULL != (r = malloc(sizeof(*r))));
 
   r->width = 1;
-  r->items = NULL;
-  r->nitems = 0;
+
+  vector_init(&(r->items));
 
   return r;
 }
@@ -42,11 +45,11 @@ query_result_create (void)
 void
 query_result_destroy (query_result *r)
 {
-  if (r)
-    {
-      free(r->items);
-      free(r);
-    }
+  if (!r)
+    return;
+
+  vector_clear(&(r->items));
+  free(r);
 }
 
 void
@@ -58,62 +61,66 @@ query_result_set_width (query_result *r, unsigned int width)
 int
 query_result_push (query_result *r, const char *item)
 {
-  ++(r->nitems);
-  r->items = realloc(r->items, sizeof(*(r->items)) * r->nitems);
-  assert_inner(r->items, "realloc");
-  r->items[r->nitems - 1] = item;
+  __returns_int;
+
+  __checked_call(0 == vector_push(&(r->items), item));
 
   return 0;
 }
 
+#define draw_line(W, C) \
+    do { \
+      putchar(' '); putchar(C); \
+      size_t i; \
+      for (i = 0; i < (W) - 2; ++i) \
+        putchar('-'); \
+      putchar(C); \
+    } while (0)
+
 int
 query_result_print (const query_result *r)
 {
-  if (r->nitems)
-    {
-      size_t *w = calloc(r->width, sizeof(*w));
-      assert_inner(w, "calloc");
+  __returns_int;
 
-      size_t i;
-      for (i = 0; i < r->nitems; ++i)
-        {
-          size_t l = strlen(r->items[i]);
-          if (l > w[i % r->width])
-            w[i % r->width] = l;
-        }
+  if (r->items.nitems)
+    {
+      size_t *w;
+      __checked_call(NULL != (w = calloc(r->width, sizeof(*w))));
+
+      vector_map(&(r->items), ITEM,
+        size_t l = strlen(ITEM);
+        if (l > w[i % r->width])
+          w[i % r->width] = l;
+      );
 
       size_t total = 1;
+      size_t i;
       for (i = 0; i < r->width; ++i)
         total += w[i] + 3;
 
-      printf(" +");
-      for (i = 0; i < total - 2; ++i)
-        putchar('-');
-      printf("+\n |");
+      draw_line(total, '+');
+      printf("\n |");
 
       for (i = 0; i < r->width; ++i)
         {
           int s = w[i % r->width];
-          printf(" %*.*s |", s, s, r->items[i]);
+          printf(" %*.*s |", s, s, r->items.items[i]);
         }
 
-      printf("\n |");
-      for (i = 0; i < total - 2; ++i)
-        putchar('-');
-      printf("|");
+      printf("\n");
+      draw_line(total, '|');
 
-      for (i = r->width; i < r->nitems; ++i)
+      for (i = r->width; i < r->items.nitems; ++i)
         {
           if (!(i % r->width))
             printf("\n |");
           int s = w[i % r->width];
-          printf(" %*.*s |", s, s, r->items[i]);
+          printf(" %*.*s |", s, s, r->items.items[i]);
         }
 
-      printf("\n +");
-      for (i = 0; i < total - 2; ++i)
-        putchar('-');
-      printf("+\n");
+      printf("\n");
+      draw_line(total, '+');
+      printf("\n");
 
       free(w);
     }
@@ -123,13 +130,10 @@ query_result_print (const query_result *r)
   double elapsed = (end.tv_sec + 1.0e-9 * end.tv_nsec) -
       (queryparser_time.tv_sec + 1.0e-9 * queryparser_time.tv_nsec);
 
-  if (r->nitems)
-    {
-      unsigned int rows = (r->nitems - 1) / r->width;
-      printf("ok: returned %u rows [%.8lfs]\n", rows, elapsed);
-    }
-  else
-    printf("ok: [%.8lfs]\n", elapsed);
+  printf("ok: ");
+  if (r->items.nitems)
+    printf("returned %zu rows ", (r->items.nitems - 1) / r->width);
+  printf("[%.8lfs]\n", elapsed);
 
   return 0;
 }

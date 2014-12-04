@@ -146,12 +146,16 @@ nt_input:
     /* empty */
   | nt_input nt_statement ';'
       {
+        __returns_int;
+
+        query_result *r;
+
         clock_gettime(CLOCK_MONOTONIC, &queryparser_time);
-        query_result *r = $2.func($2.args);
-        assert_inner(r, "%s", $2.func_name);
-        int res = query_result_print(r);
-        query_result_destroy(r);
-        assert_inner(!res, "query_result_print");
+
+        __checked_call(NULL != (r = $2.func($2.args)));
+        __checked_call(0 == query_result_print(r),
+          query_result_destroy(r);
+        );
       }
 ;
 
@@ -211,25 +215,23 @@ nt_statement:
 nt_table_create_definitions:
     nt_table_create_definition
       {
+        __returns_int;
+
         vector_init(&$$);
-        int res = vector_push(&$$, $1);
-        if (res)
-          {
-            assert_weak(!res, "vector_push");
-            vector_clear(&$$);
-            parser_assert_err(QUERY_ERR_FAILED, !res);
-          }
+        __checked_call(0 == vector_push(&$$, $1),
+          vector_clear(&$$);
+          parser_assert_err(QUERY_ERR_FAILED, 0);
+        );
       }
   | nt_table_create_definitions ',' nt_table_create_definition
       {
+        __returns_int;
+
         $$ = $1;
-        int res = vector_push(&$$, $3);
-        if (res)
-          {
-            assert_weak(0, "vector_push");
-            vector_clear(&$$);
-            parser_assert_err(QUERY_ERR_FAILED, 0);
-          }
+        __checked_call(0 == vector_push(&$$, $3),
+          vector_clear(&$$);
+          parser_assert_err(QUERY_ERR_FAILED, 0);
+        );
       }
 ;
 
@@ -282,10 +284,13 @@ nt_optional_length:
 nt_length:
     '(' NUMBER ')'
       {
+        __returns_int;
+
         queryparser_set_current_token($2);
-        int res = string_to_int(&$$, $2.v);
+        __checked_call(0 == string_to_int(&$$, $2.v),
+          free($2.v);
+        );
         free($2.v);
-        assert_inner(!res, "string_to_int");
       }
 ;
 
@@ -323,12 +328,13 @@ extern void querylexer_restart(void);
 int
 queryparser_parse_from_file (const char *filename, const char *data)
 {
+  __returns_int;
+
   queryparser_file = filename;
   querylexer_restart();
 
   yy_scan_string(data);
-  int res = yyparse();
-  assert_inner(!res, "%s: yyparse", queryparser_file);
+  __checked_call(0 == yyparse());
   yylex_destroy();
 
   return 0;
@@ -344,7 +350,6 @@ queryparser_parse_from_stdin (void)
     {
       querylexer_restart();
       res = yyparse();
-      assert_weak(!res, "%s: yyparse", queryparser_file);
     }
   while (res != 0);
 

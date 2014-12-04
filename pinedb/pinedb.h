@@ -74,6 +74,8 @@ struct arguments
 static error_t
 parse_opt (int key, char *arg, struct argp_state *state)
 {
+  __returns_int;
+
   struct arguments *args = (struct arguments*)state->input;
 
   switch (key)

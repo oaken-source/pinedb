@@ -24,24 +24,19 @@
 #include <config.h>
 
 #include <grapes/util.h>
+#include <grapes/vector.h>
+
+#include <stdlib.h>
+
+vector_declare(vec_result, const char*);
 
 struct query_result
 {
-  unsigned int width;
-  const char **items;
-  unsigned int nitems;
+  size_t width;
+
+  vec_result items;
 };
 typedef struct query_result query_result;
-
-/* convenience wrapper macro for query_result_push that includes the common
- * error handling routines
- */
-#define query_result_push_checked(R, I) \
-    do { \
-      int res = query_result_push((R), (I)); \
-      assert_inner(!res, "query_result_push"); \
-    } while (0)
-
 
 /* create and instanciate a query_result instance
  * the returned instance should be freed by invoking query_result_destroy

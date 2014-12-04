@@ -32,8 +32,10 @@ static schema *current_schema = NULL;
 static int __may_fail
 query_create_schema_impl (query_result *r, char *name, int strict)
 {
+  __returns_int;
+
   // make checks
-  assert_inner(r, "query_result_create");
+  __precondition(NULL != r);
   schema *s = datastore_get_schema_by_name(name);
   parser_assert_err(QUERY_ERR_SCHEMA_EEXISTS, !(strict && s), name);
 
@@ -41,13 +43,10 @@ query_create_schema_impl (query_result *r, char *name, int strict)
   if (s)
     return 0;
 
-  s = schema_create(name);
-  assert_inner(s, "schema_create");
-
-  int res = datastore_add_schema(s);
-  if (res)
+  __checked_call(NULL != (s = schema_create(name)));
+  __checked_call(0 == datastore_add_schema(s),
     schema_destroy(s);
-  assert_inner(!res, "datastore_add_schema");
+  );
 
   return 0;
 }
@@ -80,8 +79,10 @@ query_create_schema (query_arg *args)
 static int __may_fail
 query_drop_schema_impl (query_result *r, char *name, int strict)
 {
+  __returns_int;
+
   // make checks
-  assert_inner(r, "query_result_create");
+  __precondition(NULL != r);
   schema *s = datastore_get_schema_by_name(name);
   parser_assert_err(QUERY_ERR_SCHEMA_NOEXIST, !(strict && !s), name);
 
@@ -124,19 +125,21 @@ query_drop_schema (query_arg *args)
 static int __may_fail
 query_show_schemata_impl (query_result *r)
 {
+  __returns_int;
+
   // make checks
-  assert_inner(r, "query_result_create");
+  __precondition(NULL != r);
 
   // propagate result set
   unsigned int nschemata;
   schema **schemata = datastore_get_schemata(&nschemata);
 
   query_result_set_width(r, 1);
-  query_result_push_checked(r, "database");
+  __checked_call(0 == query_result_push(r, "database"));
 
   unsigned int i;
   for (i = 0; i < nschemata; ++i)
-    query_result_push_checked(r, schemata[i]->name);
+    __checked_call(0 == query_result_push(r, schemata[i]->name));
 
   return 0;
 }
@@ -162,8 +165,10 @@ query_show_schemata (__unused query_arg *args)
 static int __may_fail
 query_use_impl (query_result *r, char *name)
 {
+  __returns_int;
+
   // make checks
-  assert_inner(r, "query_result_create");
+  __precondition(NULL != r);
   schema *s = datastore_get_schema_by_name(name);
   parser_assert_err(QUERY_ERR_SCHEMA_NOEXIST, s, name);
 
@@ -200,8 +205,10 @@ query_use (query_arg *args)
 static int __may_fail
 query_create_table_impl (query_result *r, char *schema_name, char *name, int strict, struct tok_column *columns, size_t ncolumns)
 {
+  __returns_int;
+
   // make checks
-  assert_inner(r, "query_result_create");
+  __precondition(NULL != r);
   parser_assert_err(QUERY_ERR_NO_SCHEMA_SELECTED, schema_name || current_schema);
   schema *s = current_schema;
   if (schema_name)
@@ -214,8 +221,7 @@ query_create_table_impl (query_result *r, char *schema_name, char *name, int str
     return 0;
 
   // handle query
-  t = table_create(name);
-  assert_inner(t, "table_create");
+  __checked_call(NULL != (t = table_create(name)));
 
   size_t i;
   for (i = 0; i < ncolumns; ++i)
@@ -227,28 +233,18 @@ query_create_table_impl (query_result *r, char *schema_name, char *name, int str
           parser_assert_err(QUERY_ERR_COLUMN_EEXISTS, 0, columns[i].name);
         }
 
-      c = column_create(columns[i].name, columns[i].type.type, columns[i].type.width);
-      if (!c)
-        {
-          table_destroy(t);
-          assert_inner(0, "column_create");
-        }
-
-      int res = table_add_column(t, c);
-      if (res)
-        {
-          table_destroy(t);
-          column_destroy(c);
-          assert_inner(0, "table_add_column");
-        }
+      __checked_call(NULL != (c = column_create(columns[i].name, columns[i].type.type, columns[i].type.width)),
+        table_destroy(t);
+      );
+      __checked_call(0 == table_add_column(t, c),
+        table_destroy(t);
+        column_destroy(c);
+      );
     }
 
-  int res = schema_add_table(s, t);
-  if (res)
-    {
-      table_destroy(t);
-      assert_inner(0, "schema_add_table");
-    }
+  __checked_call(0 == schema_add_table(s, t),
+    table_destroy(t);
+  );
 
   return 0;
 }
@@ -289,8 +285,10 @@ query_create_table (query_arg *args)
 static int __may_fail
 query_drop_table_impl (query_result *r, char *schema_name, char *name, int strict)
 {
+  __returns_int;
+
   // make checks
-  assert_inner(r, "query_result_create");
+  __precondition(NULL != r);
   parser_assert_err(QUERY_ERR_NO_SCHEMA_SELECTED, schema_name || current_schema);
   schema *s = current_schema;
   if (schema_name)
@@ -340,8 +338,10 @@ query_drop_table (query_arg *args)
 static int __may_fail
 query_show_tables_impl (query_result *r, char *name)
 {
+  __returns_int;
+
   // make checks
-  assert_inner(r, "query_result_create");
+  __precondition(NULL != r);
   parser_assert_err(QUERY_ERR_NO_SCHEMA_SELECTED, current_schema || name);
   schema *s = current_schema;
   if (name)
@@ -350,14 +350,14 @@ query_show_tables_impl (query_result *r, char *name)
 
   // propagate result set
   query_result_set_width(r, 1);
-  query_result_push_checked(r, "table");
+  __checked_call(0 == query_result_push(r, "table"));
 
   unsigned int ntables;
   table **tables = schema_get_tables(s, &ntables);
 
   unsigned int i;
   for (i = 0; i < ntables; ++i)
-    query_result_push_checked(r, tables[i]->name);
+    __checked_call(0 == query_result_push(r, tables[i]->name));
 
   return 0;
 }
@@ -385,5 +385,4 @@ query_show_tables (query_arg *args)
     }
   return r;
 }
-
 

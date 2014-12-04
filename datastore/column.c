@@ -27,15 +27,14 @@
 column*
 column_create (const char *name, datatype type, int width)
 {
-  column *c = malloc(sizeof(*c));
-  assert_inner_ptr(c, "malloc");
+  __returns_ptr;
 
-  c->name = strdup(name);
-  if (!c->name)
-    {
-      free(c);
-      assert_inner_ptr(0, "strdup");
-    }
+  column *c;
+
+  __checked_call(NULL != (c = malloc(sizeof(*c))));
+  __checked_call(NULL != (c->name = strdup(name)),
+    free(c);
+  );
 
   c->type = type;
   c->width = width;
@@ -46,6 +45,9 @@ column_create (const char *name, datatype type, int width)
 void
 column_destroy (column *c)
 {
+  if (!c)
+    return;
+
   free(c->name);
   free(c);
 }

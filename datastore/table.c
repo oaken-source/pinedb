@@ -27,15 +27,14 @@
 table*
 table_create (const char *name)
 {
-  table *t = malloc(sizeof(*t));
-  assert_inner_ptr(t, "malloc");
+  __returns_ptr;
 
-  t->name = strdup(name);
-  if (!t->name)
-    {
-      free(t);
-      assert_inner_ptr(0, "strdup");
-    }
+  table *t;
+
+  __checked_call(NULL != (t = malloc(sizeof(*t))));
+  __checked_call(NULL != (t->name = strdup(name)),
+    free(t);
+  );
 
   vector_init(&(t->columns));
 
@@ -45,6 +44,9 @@ table_create (const char *name)
 void
 table_destroy (table *t)
 {
+  if (!t)
+    return;
+
   vector_map(&(t->columns), ITEM,
     column_destroy(ITEM);
   );
@@ -68,6 +70,8 @@ table_get_column_by_name (table *t, const char *name)
 int
 table_add_column (table *t, column *c)
 {
+  __returns_int;
+
   __checked_call(0 == vector_push(&(t->columns), c));
 
   return 0;
