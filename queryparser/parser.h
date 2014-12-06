@@ -23,6 +23,8 @@
 
 #include <config.h>
 
+#include <grapes/util.h>
+
 /* parse queries from mapped file
  *
  * params:
@@ -38,7 +40,7 @@
  * returns:
  *   -1 on failure, 0 on success
  */
-int queryparser_parse_from_file(const char *filename, const char *data);
+int queryparser_parse_from_file(const char *filename, const char *data) __may_fail;
 
 /* parse queries from stdin
  *
@@ -51,7 +53,7 @@ int queryparser_parse_from_file(const char *filename, const char *data);
  * returns:
  *   -1 on failure, 0 on success
  */
-int queryparser_parse_from_stdin(void);
+int queryparser_parse_from_stdin(void) __may_fail;
 
 /* enumeration of all queryparser warning types and their string representation */
 enum queryparser_warning_types
